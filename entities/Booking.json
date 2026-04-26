@@ -1,0 +1,23 @@
+{
+  "properties": {
+    "booking_id": {"type": "string"},
+    "hotel_id": {"type": "string"},
+    "hotel_name": {"type": "string"},
+    "guest_first_name": {"type": "string"},
+    "guest_last_name": {"type": "string"},
+    "guest_email": {"type": "string"},
+    "checkin": {"type": "string"},
+    "checkout": {"type": "string"},
+    "nights": {"type": "number"},
+    "adults": {"type": "number"},
+    "room_name": {"type": "string"},
+    "total_price": {"type": "number"},
+    "margin_percent": {"type": "number"},
+    "commission_earned": {"type": "number"},
+    "currency": {"type": "string"},
+    "status": {"type": "string", "enum": ["confirmed","pending","completed","cancelled"]},
+    "payout_status": {"type": "string", "enum": ["pending","paid"]},
+    "destination": {"type": "string"}
+  },
+  "type": "object"
+}
