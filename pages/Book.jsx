@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { Booking } from "@/api/entities";
 
 const LITEAPI_KEY = "prod_4924ac14-f585-4c07-98cf-51ea994bdcaf";
 const DEFAULT_MARGIN = 15;
@@ -12,7 +13,7 @@ export default function Book() {
   const [loading, setLoading] = useState(true);
   const [booking, setBooking] = useState(null);
   const [submitting, setSubmitting] = useState(false);
-  const [step, setStep] = useState(1); // 1=details, 2=confirmation
+  const [step, setStep] = useState(1);
   const [guestInfo, setGuestInfo] = useState({
     firstName: "", lastName: "", email: "", phone: "", nationality: "US",
   });
@@ -21,6 +22,7 @@ export default function Book() {
   const checkin = searchParams.get("checkin");
   const checkout = searchParams.get("checkout");
   const adults = searchParams.get("adults") || 2;
+  const hotelName = searchParams.get("hotelName") || id;
 
   const nights = checkin && checkout
     ? Math.ceil((new Date(checkout) - new Date(checkin)) / 86400000)
@@ -64,7 +66,33 @@ export default function Book() {
         }),
       });
       const data = await res.json();
-      setBooking(data.data);
+      const bookingResult = data.data;
+      setBooking(bookingResult);
+
+      // Save to Booking entity
+      const totalPrice = prebook?.retailRate?.total?.[0]?.amount || 0;
+      const commission = Math.round(totalPrice * DEFAULT_MARGIN / 100);
+
+      await Booking.create({
+        booking_id: bookingResult?.bookingId || bookingResult?.id || `RV-${Date.now()}`,
+        hotel_id: id,
+        hotel_name: hotelName,
+        guest_first_name: guestInfo.firstName,
+        guest_last_name: guestInfo.lastName,
+        guest_email: guestInfo.email,
+        checkin,
+        checkout,
+        nights,
+        adults: parseInt(adults),
+        room_name: prebook?.roomType?.name || "—",
+        total_price: Math.round(totalPrice),
+        margin_percent: DEFAULT_MARGIN,
+        commission_earned: commission,
+        currency: "USD",
+        status: "confirmed",
+        payout_status: "pending",
+      });
+
       setStep(2);
     } catch (err) {
       console.error(err);
@@ -98,10 +126,11 @@ export default function Book() {
         <div style={{ border: "1px solid rgba(201,168,76,0.3)", padding: "32px", background: "rgba(201,168,76,0.03)", marginBottom: "32px" }}>
           {[
             { label: "BOOKING REFERENCE", value: booking.bookingId || booking.id || "—" },
-            { label: "HOTEL", value: booking.hotelName || id },
+            { label: "HOTEL", value: hotelName },
             { label: "CHECK IN", value: checkin },
             { label: "CHECK OUT", value: checkout },
             { label: "GUESTS", value: `${adults} Adult${adults > 1 ? "s" : ""}` },
+            { label: "NIGHTS", value: nights },
             { label: "TOTAL PAID", value: `$${Math.round(totalPrice)}` },
             { label: "YOUR COMMISSION", value: `$${commission}` },
           ].map(item => (
@@ -176,7 +205,7 @@ export default function Book() {
                   color: "#f0ead6", fontSize: "14px", padding: "10px 0", outline: "none", width: "100%",
                 }}
               >
-                {[["US", "United States"], ["GB", "United Kingdom"], ["AE", "UAE"], ["FR", "France"], ["DE", "Germany"], ["JP", "Japan"], ["AU", "Australia"], ["CA", "Canada"]].map(([code, name]) => (
+                {[["US","United States"],["GB","United Kingdom"],["AE","UAE"],["FR","France"],["DE","Germany"],["JP","Japan"],["AU","Australia"],["CA","Canada"]].map(([code, name]) => (
                   <option key={code} value={code} style={{ background: "#1a1a1a" }}>{name}</option>
                 ))}
               </select>
@@ -206,7 +235,7 @@ export default function Book() {
           <div style={{ border: "1px solid rgba(201,168,76,0.3)", padding: "28px", background: "rgba(201,168,76,0.02)", position: "sticky", top: "40px" }}>
             <div style={{ fontSize: "10px", letterSpacing: "4px", color: "#c9a84c", marginBottom: "20px" }}>BOOKING SUMMARY</div>
             {[
-              { label: "HOTEL ID", value: id },
+              { label: "HOTEL", value: hotelName },
               { label: "CHECK IN", value: checkin },
               { label: "CHECK OUT", value: checkout },
               { label: "NIGHTS", value: nights },

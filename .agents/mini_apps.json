@@ -2,8 +2,8 @@
   "app_id": "69edd9bfdbba818a11801bdd",
   "slug": "kristal-app-11801bdd",
   "pages": {
-    "Home": {
-      "title": "Home"
+    "Book": {
+      "title": "Book"
     },
     "Search": {
       "title": "Search"
@@ -11,8 +11,8 @@
     "Hotel": {
       "title": "Hotel"
     },
-    "Book": {
-      "title": "Book"
+    "Home": {
+      "title": "Home"
     }
   }
 }
