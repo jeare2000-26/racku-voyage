@@ -16,26 +16,12 @@ export default function Search() {
     checkout: searchParams.get("checkout") || "",
     adults: searchParams.get("adults") || 2,
   });
-  const [cityData, setCityData] = useState(null);
-  const [priceRange, setPriceRange] = useState([0, 5000]);
   const [sortBy, setSortBy] = useState("recommended");
+  const [starFilter, setStarFilter] = useState([]);
+  const [resultCount, setResultCount] = useState(0);
 
   const today = new Date().toISOString().split("T")[0];
   const tomorrow = new Date(Date.now() + 86400000).toISOString().split("T")[0];
-
-  // City to country code mapping
-  const cityMap = {
-    paris: { countryCode: "FR", cityName: "Paris" },
-    dubai: { countryCode: "AE", cityName: "Dubai" },
-    "new york": { countryCode: "US", cityName: "New York" },
-    tokyo: { countryCode: "JP", cityName: "Tokyo" },
-    maldives: { countryCode: "MV", cityName: "Malé" },
-    santorini: { countryCode: "GR", cityName: "Santorini" },
-    london: { countryCode: "GB", cityName: "London" },
-    barcelona: { countryCode: "ES", cityName: "Barcelona" },
-    rome: { countryCode: "IT", cityName: "Rome" },
-    bali: { countryCode: "ID", cityName: "Bali" },
-  };
 
   const searchHotels = async (form = searchForm) => {
     if (!form.destination || !form.checkin || !form.checkout) return;
@@ -44,25 +30,39 @@ export default function Search() {
     setHotels([]);
 
     try {
-      const destLower = form.destination.toLowerCase();
-      const cityInfo = cityMap[destLower] || { countryCode: "US", cityName: form.destination };
+      // Step 1: Resolve destination to a placeId using /data/places
+      const placesRes = await fetch(
+        `https://api.liteapi.travel/v3.0/data/places?textQuery=${encodeURIComponent(form.destination)}&type=locality`,
+        { headers: { "X-API-Key": LITEAPI_KEY } }
+      );
+      const placesData = await placesRes.json();
+      const place = placesData.data?.[0];
 
-      // Step 1: Get hotels by city/country
+      if (!place) {
+        setError(`Could not find "${form.destination}". Try a different city name.`);
+        setLoading(false);
+        return;
+      }
+
+      const placeId = place.id;
+
+      // Step 2: Get hotels by placeId
       const hotelsRes = await fetch(
-        `https://api.liteapi.travel/v3.0/data/hotels?countryCode=${cityInfo.countryCode}&limit=20&language=en`,
+        `https://api.liteapi.travel/v3.0/data/hotels?placeId=${encodeURIComponent(placeId)}&limit=20&language=en`,
         { headers: { "X-API-Key": LITEAPI_KEY } }
       );
       const hotelsData = await hotelsRes.json();
 
       if (!hotelsData.data || hotelsData.data.length === 0) {
-        setError("No hotels found for this destination. Try another city.");
+        setError(`No hotels found in "${form.destination}". Try another destination.`);
         setLoading(false);
         return;
       }
 
-      const hotelIds = hotelsData.data.slice(0, 10).map(h => h.id);
+      const hotelIds = hotelsData.data.slice(0, 15).map(h => h.id);
+      setResultCount(hotelsData.data.length);
 
-      // Step 2: Get rates for those hotels
+      // Step 3: Get live rates with 15% margin
       const ratesRes = await fetch("https://api.liteapi.travel/v3.0/hotels/rates", {
         method: "POST",
         headers: {
@@ -79,23 +79,30 @@ export default function Search() {
           margin: DEFAULT_MARGIN,
         }),
       });
-
       const ratesData = await ratesRes.json();
 
-      // Merge hotel info with rates
-      const merged = hotelsData.data.slice(0, 10).map(hotel => {
+      // Step 4: Merge hotel info with rates
+      const merged = hotelsData.data.slice(0, 15).map(hotel => {
         const rateInfo = ratesData.data?.find(r => r.hotelId === hotel.id);
-        const lowestRate = rateInfo?.roomTypes?.[0]?.rates?.[0];
+        const lowestRoom = rateInfo?.roomTypes?.[0];
+        const lowestRate = lowestRoom?.rates?.[0];
         return {
           ...hotel,
+          roomName: lowestRoom?.name,
           rate: lowestRate,
           hasRates: !!lowestRate,
         };
-      }).filter(h => h.hasRates);
+      });
 
-      setHotels(merged.length > 0 ? merged : hotelsData.data.slice(0, 10).map(h => ({ ...h, hasRates: false })));
+      // Sort
+      let sorted = [...merged];
+      if (sortBy === "price_low") sorted.sort((a, b) => (a.rate?.retailRate?.total?.[0]?.amount || 9999) - (b.rate?.retailRate?.total?.[0]?.amount || 9999));
+      if (sortBy === "price_high") sorted.sort((a, b) => (b.rate?.retailRate?.total?.[0]?.amount || 0) - (a.rate?.retailRate?.total?.[0]?.amount || 0));
+      if (sortBy === "rating") sorted.sort((a, b) => (b.starRating || 0) - (a.starRating || 0));
+
+      setHotels(sorted);
     } catch (err) {
-      setError("Something went wrong fetching hotels. Please try again.");
+      setError("Something went wrong. Please try again.");
       console.error(err);
     }
     setLoading(false);
@@ -116,16 +123,21 @@ export default function Search() {
     ? Math.ceil((new Date(searchForm.checkout) - new Date(searchForm.checkin)) / 86400000)
     : 1;
 
+  const displayedHotels = starFilter.length > 0
+    ? hotels.filter(h => starFilter.includes(h.starRating || 0))
+    : hotels;
+
   return (
     <div style={{ fontFamily: "'Georgia', serif", backgroundColor: "#0a0a0a", color: "#f0ead6", minHeight: "100vh" }}>
 
       {/* NAV */}
       <nav style={{
         display: "flex", justifyContent: "space-between", alignItems: "center",
-        padding: "20px 60px", borderBottom: "1px solid rgba(201,168,76,0.15)",
+        padding: "20px 40px", borderBottom: "1px solid rgba(201,168,76,0.15)",
         background: "#0a0a0a", position: "sticky", top: 0, zIndex: 100,
+        flexWrap: "wrap", gap: "12px",
       }}>
-        <div onClick={() => navigate("/")} style={{ cursor: "pointer", display: "flex", alignItems: "center", gap: "10px" }}>
+        <div onClick={() => navigate("/")} style={{ cursor: "pointer", display: "flex", alignItems: "center", gap: "8px" }}>
           <span style={{ fontSize: "22px", color: "#c9a84c", letterSpacing: "3px", fontWeight: "300" }}>RACKU</span>
           <span style={{ fontSize: "11px", color: "#c9a84c", letterSpacing: "5px" }}>VOYAGE</span>
         </div>
@@ -136,12 +148,12 @@ export default function Search() {
           border: "1px solid rgba(201,168,76,0.2)",
         }}>
           <input
-            type="text" placeholder="Destination"
+            type="text" placeholder="City, Country..."
             value={searchForm.destination}
             onChange={e => setSearchForm({ ...searchForm, destination: e.target.value })}
             style={{
               background: "transparent", border: "none", borderBottom: "1px solid rgba(201,168,76,0.3)",
-              color: "#f0ead6", fontSize: "13px", padding: "6px 0", outline: "none", width: "140px",
+              color: "#f0ead6", fontSize: "13px", padding: "6px 0", outline: "none", width: "160px",
             }}
           />
           <input type="date" value={searchForm.checkin} min={today}
@@ -164,60 +176,61 @@ export default function Search() {
         </form>
       </nav>
 
-      <div style={{ display: "flex", gap: "0" }}>
+      <div style={{ display: "flex" }}>
 
-        {/* SIDEBAR FILTERS */}
+        {/* SIDEBAR */}
         <div style={{
-          width: "260px", minWidth: "260px", padding: "40px 28px",
-          borderRight: "1px solid rgba(201,168,76,0.1)", background: "rgba(255,255,255,0.01)",
+          width: "240px", minWidth: "240px", padding: "32px 24px",
+          borderRight: "1px solid rgba(201,168,76,0.1)",
+          background: "rgba(255,255,255,0.01)",
           position: "sticky", top: "73px", height: "calc(100vh - 73px)", overflowY: "auto",
         }}>
-          <div style={{ fontSize: "10px", letterSpacing: "4px", color: "#c9a84c", marginBottom: "32px" }}>FILTER & SORT</div>
+          <div style={{ fontSize: "10px", letterSpacing: "4px", color: "#c9a84c", marginBottom: "28px" }}>FILTER & SORT</div>
 
-          <div style={{ marginBottom: "32px" }}>
-            <div style={{ fontSize: "11px", letterSpacing: "3px", color: "#d4c5a0", marginBottom: "16px" }}>SORT BY</div>
-            {["recommended", "price_low", "price_high", "rating"].map(opt => (
-              <div key={opt} onClick={() => setSortBy(opt)} style={{
-                display: "flex", alignItems: "center", gap: "10px", marginBottom: "12px", cursor: "pointer",
-              }}>
-                <div style={{
-                  width: "14px", height: "14px", border: "1px solid #c9a84c",
-                  borderRadius: "50%", background: sortBy === opt ? "#c9a84c" : "transparent",
-                  flexShrink: 0,
-                }} />
-                <span style={{ fontSize: "12px", color: sortBy === opt ? "#c9a84c" : "#7a6e5a", letterSpacing: "1px" }}>
-                  {opt === "recommended" ? "Recommended" : opt === "price_low" ? "Price: Low to High" : opt === "price_high" ? "Price: High to Low" : "Star Rating"}
-                </span>
+          {/* Sort */}
+          <div style={{ marginBottom: "28px" }}>
+            <div style={{ fontSize: "11px", letterSpacing: "2px", color: "#d4c5a0", marginBottom: "14px" }}>SORT BY</div>
+            {[
+              { key: "recommended", label: "Recommended" },
+              { key: "price_low", label: "Price: Low → High" },
+              { key: "price_high", label: "Price: High → Low" },
+              { key: "rating", label: "Star Rating" },
+            ].map(opt => (
+              <div key={opt.key} onClick={() => { setSortBy(opt.key); searchHotels(); }} style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "10px", cursor: "pointer" }}>
+                <div style={{ width: "12px", height: "12px", border: "1px solid #c9a84c", borderRadius: "50%", background: sortBy === opt.key ? "#c9a84c" : "transparent", flexShrink: 0 }} />
+                <span style={{ fontSize: "12px", color: sortBy === opt.key ? "#c9a84c" : "#7a6e5a" }}>{opt.label}</span>
               </div>
             ))}
           </div>
 
-          <div style={{ marginBottom: "32px" }}>
-            <div style={{ fontSize: "11px", letterSpacing: "3px", color: "#d4c5a0", marginBottom: "16px" }}>STAR RATING</div>
-            {[5, 4, 3].map(star => (
-              <div key={star} style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "12px", cursor: "pointer" }}>
-                <div style={{ width: "14px", height: "14px", border: "1px solid rgba(201,168,76,0.4)" }} />
-                <span style={{ fontSize: "12px", color: "#7a6e5a" }}>{"★".repeat(star)} & above</span>
+          {/* Star filter */}
+          <div style={{ marginBottom: "28px" }}>
+            <div style={{ fontSize: "11px", letterSpacing: "2px", color: "#d4c5a0", marginBottom: "14px" }}>STAR RATING</div>
+            {[5, 4, 3, 2].map(star => (
+              <div key={star} onClick={() => setStarFilter(prev => prev.includes(star) ? prev.filter(s => s !== star) : [...prev, star])}
+                style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "10px", cursor: "pointer" }}>
+                <div style={{ width: "12px", height: "12px", border: "1px solid rgba(201,168,76,0.4)", background: starFilter.includes(star) ? "#c9a84c" : "transparent" }} />
+                <span style={{ fontSize: "12px", color: starFilter.includes(star) ? "#c9a84c" : "#7a6e5a" }}>{"★".repeat(star)} & up</span>
               </div>
             ))}
           </div>
 
-          <div style={{ padding: "16px", background: "rgba(201,168,76,0.05)", border: "1px solid rgba(201,168,76,0.15)" }}>
-            <div style={{ fontSize: "10px", letterSpacing: "3px", color: "#c9a84c", marginBottom: "8px" }}>COMMISSION RATE</div>
-            <div style={{ fontSize: "28px", color: "#c9a84c", fontWeight: "300" }}>{DEFAULT_MARGIN}%</div>
-            <div style={{ fontSize: "10px", color: "#5a5040", letterSpacing: "1px" }}>MARGIN ON ALL BOOKINGS</div>
+          <div style={{ padding: "16px", background: "rgba(74,144,96,0.06)", border: "1px solid rgba(74,144,96,0.2)" }}>
+            <div style={{ fontSize: "10px", letterSpacing: "2px", color: "#4a9060", marginBottom: "6px" }}>YOUR MARGIN</div>
+            <div style={{ fontSize: "28px", color: "#4a9060", fontWeight: "300" }}>{DEFAULT_MARGIN}%</div>
+            <div style={{ fontSize: "10px", color: "#3a6040", letterSpacing: "1px" }}>ON EVERY BOOKING</div>
           </div>
         </div>
 
         {/* RESULTS */}
-        <div style={{ flex: 1, padding: "40px 48px" }}>
-          {searchForm.destination && (
-            <div style={{ marginBottom: "32px" }}>
-              <h1 style={{ fontSize: "32px", fontWeight: "300", margin: "0 0 8px" }}>
+        <div style={{ flex: 1, padding: "36px 48px" }}>
+          {searchForm.destination && !loading && hotels.length > 0 && (
+            <div style={{ marginBottom: "28px" }}>
+              <h1 style={{ fontSize: "28px", fontWeight: "300", margin: "0 0 6px" }}>
                 Hotels in <span style={{ color: "#c9a84c", fontStyle: "italic" }}>{searchForm.destination}</span>
               </h1>
-              <div style={{ fontSize: "12px", color: "#7a6e5a", letterSpacing: "2px" }}>
-                {hotels.length > 0 ? `${hotels.length} PROPERTIES FOUND` : ""}
+              <div style={{ fontSize: "11px", color: "#7a6e5a", letterSpacing: "2px" }}>
+                {displayedHotels.length} PROPERTIES SHOWN
                 {nights > 0 ? ` · ${nights} NIGHT${nights > 1 ? "S" : ""}` : ""}
                 {searchForm.adults ? ` · ${searchForm.adults} GUEST${searchForm.adults > 1 ? "S" : ""}` : ""}
               </div>
@@ -226,92 +239,96 @@ export default function Search() {
 
           {!searchForm.destination && !loading && (
             <div style={{ textAlign: "center", padding: "120px 20px" }}>
-              <div style={{ fontSize: "48px", marginBottom: "16px" }}>✦</div>
-              <div style={{ fontSize: "22px", fontWeight: "300", color: "#c9a84c", marginBottom: "12px" }}>Where Would You Like to Go?</div>
-              <div style={{ fontSize: "14px", color: "#5a5040" }}>Enter a destination above to discover luxury hotels</div>
+              <div style={{ fontSize: "48px", marginBottom: "16px", color: "#c9a84c" }}>✦</div>
+              <div style={{ fontSize: "20px", fontWeight: "300", color: "#c9a84c", marginBottom: "12px" }}>Where Would You Like to Go?</div>
+              <div style={{ fontSize: "13px", color: "#5a5040" }}>Enter any city in the world to discover hotels</div>
             </div>
           )}
 
           {loading && (
             <div style={{ textAlign: "center", padding: "120px 20px" }}>
-              <div style={{ fontSize: "40px", color: "#c9a84c", marginBottom: "20px", animation: "spin 1.5s linear infinite" }}>✦</div>
-              <div style={{ fontSize: "16px", color: "#7a6e5a", letterSpacing: "3px" }}>SEARCHING LUXURY PROPERTIES...</div>
-              <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
+              <div style={{ fontSize: "40px", color: "#c9a84c", marginBottom: "20px" }}>✦</div>
+              <div style={{ fontSize: "14px", color: "#7a6e5a", letterSpacing: "4px" }}>SEARCHING {searchForm.destination.toUpperCase()}...</div>
+              <div style={{ fontSize: "11px", color: "#5a5040", marginTop: "12px", letterSpacing: "2px" }}>Finding the best rates with {DEFAULT_MARGIN}% margin applied</div>
+              <style>{`@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }`}</style>
             </div>
           )}
 
           {error && (
-            <div style={{ padding: "24px", border: "1px solid rgba(255,100,100,0.3)", background: "rgba(255,100,100,0.05)", color: "#ff8080", fontSize: "14px" }}>
+            <div style={{ padding: "24px", border: "1px solid rgba(255,100,100,0.3)", background: "rgba(255,100,100,0.05)", color: "#ff8080", fontSize: "14px", marginBottom: "20px" }}>
               {error}
             </div>
           )}
 
-          <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-            {hotels.map((hotel, idx) => (
-              <div
-                key={hotel.id || idx}
-                onClick={() => navigate(`/hotel/${hotel.id}?checkin=${searchForm.checkin}&checkout=${searchForm.checkout}&adults=${searchForm.adults}`)}
-                style={{
-                  display: "flex", gap: "0", border: "1px solid rgba(201,168,76,0.15)",
-                  cursor: "pointer", transition: "border-color 0.3s", overflow: "hidden",
-                  background: "rgba(255,255,255,0.02)",
-                }}
-                onMouseOver={e => e.currentTarget.style.borderColor = "rgba(201,168,76,0.5)"}
-                onMouseOut={e => e.currentTarget.style.borderColor = "rgba(201,168,76,0.15)"}
-              >
-                <img
-                  src={hotel.thumbnail || hotel.main_photo || `https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?w=400&q=70`}
-                  alt={hotel.name}
-                  style={{ width: "260px", minWidth: "260px", height: "200px", objectFit: "cover" }}
-                />
-                <div style={{ flex: 1, padding: "28px 32px", display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                  <div>
-                    <div style={{ fontSize: "11px", letterSpacing: "3px", color: "#c9a84c", marginBottom: "8px" }}>
-                      {"★".repeat(hotel.starRating || hotel.stars || 5)}
+          <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+            {displayedHotels.map((hotel, idx) => {
+              const price = hotel.rate?.retailRate?.total?.[0]?.amount || hotel.rate?.offerRetailRate?.amount || 0;
+              const commission = Math.round(price * DEFAULT_MARGIN / 100);
+              return (
+                <div
+                  key={hotel.id || idx}
+                  onClick={() => navigate(`/hotel/${hotel.id}?checkin=${searchForm.checkin}&checkout=${searchForm.checkout}&adults=${searchForm.adults}&hotelName=${encodeURIComponent(hotel.name)}`)}
+                  style={{
+                    display: "flex", border: "1px solid rgba(201,168,76,0.12)",
+                    cursor: "pointer", transition: "border-color 0.3s, background 0.3s",
+                    background: "rgba(255,255,255,0.015)", overflow: "hidden",
+                  }}
+                  onMouseOver={e => { e.currentTarget.style.borderColor = "rgba(201,168,76,0.45)"; e.currentTarget.style.background = "rgba(201,168,76,0.03)"; }}
+                  onMouseOut={e => { e.currentTarget.style.borderColor = "rgba(201,168,76,0.12)"; e.currentTarget.style.background = "rgba(255,255,255,0.015)"; }}
+                >
+                  <img
+                    src={hotel.thumbnail || hotel.main_photo || `https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?w=400&q=70`}
+                    alt={hotel.name}
+                    onError={e => e.target.src = "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?w=400&q=70"}
+                    style={{ width: "240px", minWidth: "240px", height: "180px", objectFit: "cover" }}
+                  />
+                  <div style={{ flex: 1, padding: "24px 28px", display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: "11px", color: "#c9a84c", marginBottom: "6px", letterSpacing: "1px" }}>
+                        {"★".repeat(Math.min(hotel.starRating || 3, 5))}
+                      </div>
+                      <h3 style={{ fontSize: "18px", fontWeight: "300", margin: "0 0 6px", letterSpacing: "0.3px" }}>{hotel.name}</h3>
+                      <div style={{ fontSize: "12px", color: "#7a6e5a", marginBottom: "12px", letterSpacing: "1px" }}>
+                        {[hotel.address?.city, hotel.address?.country].filter(Boolean).join(", ") || searchForm.destination}
+                      </div>
+                      {hotel.facilities?.slice(0, 4).map(f => (
+                        <span key={f} style={{
+                          fontSize: "10px", color: "#5a5040", border: "1px solid rgba(255,255,255,0.07)",
+                          padding: "3px 8px", marginRight: "6px", display: "inline-block", marginBottom: "4px",
+                        }}>{f}</span>
+                      ))}
                     </div>
-                    <h3 style={{ fontSize: "20px", fontWeight: "300", margin: "0 0 8px", letterSpacing: "0.5px" }}>
-                      {hotel.name}
-                    </h3>
-                    <div style={{ fontSize: "12px", color: "#7a6e5a", marginBottom: "16px", letterSpacing: "1px" }}>
-                      {hotel.address?.city || hotel.city || searchForm.destination}
-                      {hotel.address?.country ? `, ${hotel.address.country}` : ""}
+                    <div style={{ textAlign: "right", minWidth: "160px", paddingLeft: "20px" }}>
+                      {hotel.hasRates && price > 0 ? (
+                        <>
+                          <div style={{ fontSize: "10px", letterSpacing: "2px", color: "#7a6e5a", marginBottom: "4px" }}>FROM</div>
+                          <div style={{ fontSize: "30px", color: "#c9a84c", fontWeight: "300", lineHeight: 1 }}>${Math.round(price)}</div>
+                          <div style={{ fontSize: "10px", color: "#5a5040", letterSpacing: "1px", marginTop: "4px" }}>PER NIGHT · USD</div>
+                          <div style={{ fontSize: "10px", color: "#4a9060", marginTop: "6px", letterSpacing: "1px" }}>
+                            ✓ +${commission} commission
+                          </div>
+                        </>
+                      ) : (
+                        <div style={{ fontSize: "12px", color: "#5a5040" }}>CHECK AVAILABILITY</div>
+                      )}
+                      <button style={{
+                        marginTop: "14px", background: "#c9a84c", color: "#0a0a0a",
+                        border: "none", padding: "9px 18px", fontSize: "10px",
+                        letterSpacing: "2px", cursor: "pointer", fontWeight: "600", width: "100%",
+                      }}>VIEW HOTEL</button>
                     </div>
-                    {hotel.facilities && hotel.facilities.slice(0, 3).map(f => (
-                      <span key={f} style={{
-                        fontSize: "10px", letterSpacing: "1px", color: "#5a5040",
-                        border: "1px solid rgba(255,255,255,0.08)", padding: "4px 10px",
-                        marginRight: "8px", display: "inline-block",
-                      }}>{f}</span>
-                    ))}
-                  </div>
-                  <div style={{ textAlign: "right", minWidth: "160px" }}>
-                    {hotel.rate ? (
-                      <>
-                        <div style={{ fontSize: "11px", letterSpacing: "2px", color: "#7a6e5a", marginBottom: "4px" }}>FROM</div>
-                        <div style={{ fontSize: "32px", color: "#c9a84c", fontWeight: "300" }}>
-                          ${Math.round(hotel.rate.retailRate?.total?.[0]?.amount || hotel.rate.offerRetailRate?.amount || 0)}
-                        </div>
-                        <div style={{ fontSize: "11px", color: "#5a5040", letterSpacing: "1px" }}>PER NIGHT · INCL. TAXES</div>
-                        <div style={{ fontSize: "10px", color: "#4a9060", marginTop: "4px", letterSpacing: "1px" }}>
-                          ✓ {DEFAULT_MARGIN}% COMMISSION APPLIED
-                        </div>
-                      </>
-                    ) : (
-                      <>
-                        <div style={{ fontSize: "13px", color: "#7a6e5a", letterSpacing: "1px" }}>RATES ON REQUEST</div>
-                        <div style={{ fontSize: "10px", color: "#5a5040", marginTop: "4px" }}>Select dates to see pricing</div>
-                      </>
-                    )}
-                    <button style={{
-                      marginTop: "16px", background: "#c9a84c", color: "#0a0a0a",
-                      border: "none", padding: "10px 20px", fontSize: "11px",
-                      letterSpacing: "2px", cursor: "pointer", fontWeight: "600", width: "100%",
-                    }}>VIEW HOTEL</button>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
+
+          {!loading && hotels.length === 0 && searchForm.destination && !error && (
+            <div style={{ textAlign: "center", padding: "80px", border: "1px solid rgba(201,168,76,0.1)" }}>
+              <div style={{ fontSize: "13px", color: "#5a5040", letterSpacing: "2px" }}>NO RESULTS FOUND</div>
+              <div style={{ fontSize: "12px", color: "#3a3028", marginTop: "8px" }}>Try adjusting your dates or destination</div>
+            </div>
+          )}
         </div>
       </div>
     </div>
