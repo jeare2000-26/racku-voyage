@@ -5,14 +5,14 @@
     "Home": {
       "title": "Home"
     },
-    "Dashboard": {
-      "title": "Dashboard"
-    },
     "Search": {
       "title": "Search"
     },
     "Hotel": {
       "title": "Hotel"
+    },
+    "Dashboard": {
+      "title": "Dashboard"
     },
     "Book": {
       "title": "Book"

@@ -7,8 +7,20 @@ const DEFAULT_MARGIN = 15;
 const NAV_ITEMS = ["Rooms", "Gallery", "Conference Halls", "About", "Specials", "News", "Contact"];
 const RESTAURANT_ITEMS = ["Restaurant", "Lobby Bar", "Basement Bar", "Rooftop Bar"];
 
+const T = {
+  bg: "#0B0F1A", bgCard: "#111827", bgCardHover: "#161D2E", sidebar: "#0D1120",
+  border: "#1E2A3D", gold: "#C9A84C", goldLight: "#E0C06A", goldMuted: "#8A6E32",
+  text: "#F0EAD6", textMuted: "#8A99B8", textFaint: "#4A5568", white: "#FFFFFF",
+};
+
+const inputStyle = (T) => ({
+  width: "100%", background: "transparent", border: "none",
+  borderBottom: `1px solid ${T.border}`, color: T.text,
+  fontSize: "14px", padding: "8px 0", outline: "none",
+  fontFamily: "Georgia, serif", boxSizing: "border-box",
+});
+
 export default function Book() {
-  
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [form, setForm] = useState({ firstName: "", lastName: "", email: "", phone: "", specialRequests: "" });
@@ -64,111 +76,128 @@ export default function Book() {
     setLoading(false);
   };
 
+  // CONFIRMATION SCREEN
   if (confirmed) return (
-    <div style={{ fontFamily: "Georgia, serif", background: "#F0EDE8", minHeight: "100vh", display: "flex" }}>
-      <aside style={{ width: "180px", minWidth: "180px", padding: "28px 20px", borderRight: "1px solid #D8D3CC", position: "fixed", top: 0, left: 0, bottom: 0, background: "#F0EDE8" }}>
-        <div style={{ fontSize: "11px", letterSpacing: "3px", color: "#1E1612", textTransform: "uppercase", marginBottom: "36px", cursor: "pointer" }} onClick={() => navigate("/")}>RACKU VOYAGE</div>
-        {NAV_ITEMS.map(item => <div key={item} style={{ fontSize: "12px", color: "#46424A", marginBottom: "10px" }}>{item}</div>)}
+    <div style={{ fontFamily: "Georgia, serif", background: T.bg, minHeight: "100vh", display: "flex", color: T.text }}>
+      <aside style={{ width: "180px", minWidth: "180px", padding: "28px 20px", borderRight: `1px solid ${T.border}`, position: "fixed", top: 0, left: 0, bottom: 0, background: T.sidebar }}>
+        <div style={{ fontSize: "11px", letterSpacing: "3px", color: T.gold, textTransform: "uppercase", marginBottom: "36px", cursor: "pointer" }} onClick={() => navigate("/")}>RACKU VOYAGE</div>
+        {NAV_ITEMS.map(item => <div key={item} style={{ fontSize: "12px", color: T.textMuted, marginBottom: "10px" }}>{item}</div>)}
       </aside>
       <main style={{ marginLeft: "180px", flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
         <div style={{ textAlign: "center", maxWidth: "480px", padding: "0 24px" }}>
-          <div style={{ fontSize: "9px", letterSpacing: "6px", color: "#CBCBCB", textTransform: "uppercase", marginBottom: "20px" }}>Booking Confirmed</div>
-          <h2 style={{ fontSize: "36px", fontWeight: 300, margin: "0 0 6px", letterSpacing: "-0.5px" }}>{hotelName}</h2>
-          <div style={{ fontSize: "12px", color: "#867878", marginBottom: "36px" }}>Confirmation #{confirmed.bookingId}</div>
-          <div style={{ border: "1px solid #D8D3CC", padding: "24px", marginBottom: "32px", textAlign: "left" }}>
-            {[["Guest", `${form.firstName} ${form.lastName}`],["Email",form.email],["Check In",checkin],["Check Out",checkout],["Room",roomName],["Total",`$${price} USD`],["Commission",`+$${commission}`]].map(([k,v]) => (
-              <div key={k} style={{ display: "flex", justifyContent: "space-between", padding: "7px 0", borderBottom: "1px solid #EDEAE6" }}>
-                <span style={{ fontSize: "9px", letterSpacing: "2px", color: "#CBCBCB", textTransform: "uppercase" }}>{k}</span>
-                <span style={{ fontSize: "11px", color: "#46424A" }}>{v}</span>
+          <div style={{ width: "56px", height: "56px", borderRadius: "50%", background: T.bgCard, border: `2px solid ${T.gold}`, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 24px", fontSize: "22px" }}>✓</div>
+          <div style={{ fontSize: "9px", letterSpacing: "6px", color: T.goldMuted, textTransform: "uppercase", marginBottom: "20px" }}>Booking Confirmed</div>
+          <h2 style={{ fontSize: "32px", fontWeight: 300, margin: "0 0 6px", letterSpacing: "-0.5px", color: T.text }}>{hotelName}</h2>
+          <div style={{ fontSize: "12px", color: T.textMuted, marginBottom: "36px" }}>Confirmation #{confirmed.bookingId}</div>
+          <div style={{ border: `1px solid ${T.border}`, padding: "24px", marginBottom: "32px", textAlign: "left", background: T.bgCard }}>
+            {[
+              ["Guest", `${form.firstName} ${form.lastName}`],
+              ["Email", form.email],
+              ["Check In", checkin],
+              ["Check Out", checkout],
+              ["Room", roomName],
+              ["Total", `$${price} USD`],
+              ["Commission", `+$${commission}`],
+            ].map(([k, v]) => (
+              <div key={k} style={{ display: "flex", justifyContent: "space-between", padding: "7px 0", borderBottom: `1px solid ${T.border}` }}>
+                <span style={{ fontSize: "9px", letterSpacing: "2px", color: T.textFaint, textTransform: "uppercase" }}>{k}</span>
+                <span style={{ fontSize: "11px", color: k === "Commission" ? T.gold : T.textMuted }}>{v}</span>
               </div>
             ))}
           </div>
           <div style={{ display: "flex", gap: "12px", justifyContent: "center" }}>
-            <button onClick={() => navigate("/")} style={{ background: "#1E1612", color: "#F0EDE8", border: "none", padding: "12px 28px", fontSize: "10px", letterSpacing: "3px", cursor: "pointer", textTransform: "uppercase" }}>New Search</button>
-            <button onClick={() => navigate("/dashboard")} style={{ background: "transparent", border: "1px solid #D8D3CC", color: "#46424A", padding: "12px 22px", fontSize: "10px", letterSpacing: "2px", cursor: "pointer", textTransform: "uppercase" }}>Dashboard</button>
+            <button onClick={() => navigate("/")} style={{ background: T.gold, color: T.bg, border: "none", padding: "12px 28px", fontSize: "10px", letterSpacing: "3px", cursor: "pointer", textTransform: "uppercase", fontWeight: 600 }}>New Search</button>
+            <button onClick={() => navigate("/dashboard")} style={{ background: "transparent", border: `1px solid ${T.goldMuted}`, color: T.gold, padding: "12px 22px", fontSize: "10px", letterSpacing: "2px", cursor: "pointer", textTransform: "uppercase" }}>Dashboard</button>
           </div>
         </div>
       </main>
     </div>
   );
 
+  // BOOKING FORM
   return (
-    <div style={{ fontFamily: "Georgia, serif", background: "#F0EDE8", minHeight: "100vh", color: "#1E1612", display: "flex" }}>
+    <div style={{ fontFamily: "Georgia, serif", background: T.bg, minHeight: "100vh", color: T.text, display: "flex" }}>
+
       {/* SIDEBAR */}
-      <aside style={{ width: "180px", minWidth: "180px", padding: "28px 20px", borderRight: "1px solid #D8D3CC", display: "flex", flexDirection: "column", justifyContent: "space-between", position: "fixed", top: 0, left: 0, bottom: 0, zIndex: 50, background: "#F0EDE8", overflowY: "auto" }}>
+      <aside style={{ width: "180px", minWidth: "180px", padding: "28px 20px", borderRight: `1px solid ${T.border}`, display: "flex", flexDirection: "column", justifyContent: "space-between", position: "fixed", top: 0, left: 0, bottom: 0, zIndex: 50, background: T.sidebar, overflowY: "auto" }}>
         <div>
-          <div style={{ fontSize: "11px", letterSpacing: "3px", color: "#1E1612", textTransform: "uppercase", marginBottom: "36px", cursor: "pointer" }} onClick={() => navigate("/")}>RACKU VOYAGE</div>
+          <div style={{ fontSize: "11px", letterSpacing: "3px", color: T.gold, textTransform: "uppercase", marginBottom: "36px", cursor: "pointer" }} onClick={() => navigate("/")}>RACKU VOYAGE</div>
           {NAV_ITEMS.map(item => (
-            <div key={item} style={{ fontSize: "12px", color: "#46424A", marginBottom: "10px", cursor: "pointer" }}
-              onMouseEnter={e => e.target.style.color = "#1E1612"} onMouseLeave={e => e.target.style.color = "#46424A"}>{item}</div>
+            <div key={item} style={{ fontSize: "12px", color: T.textMuted, marginBottom: "10px", cursor: "pointer", transition: "color 0.2s" }}
+              onMouseEnter={e => e.currentTarget.style.color = T.gold}
+              onMouseLeave={e => e.currentTarget.style.color = T.textMuted}>{item}</div>
           ))}
-          <div style={{ height: "1px", background: "#D8D3CC", margin: "18px 0" }} />
-          {RESTAURANT_ITEMS.map(item => <div key={item} style={{ fontSize: "11px", color: "#867878", marginBottom: "9px" }}>{item}</div>)}
+          <div style={{ height: "1px", background: T.border, margin: "18px 0" }} />
+          {RESTAURANT_ITEMS.map(item => <div key={item} style={{ fontSize: "11px", color: T.textFaint, marginBottom: "9px" }}>{item}</div>)}
         </div>
-        <button onClick={() => navigate(-1)} style={{ background: "transparent", border: "1px solid #CBCBCB", color: "#46424A", padding: "7px 12px", fontSize: "10px", letterSpacing: "2px", cursor: "pointer", textTransform: "uppercase", width: "100%" }}>← Back</button>
+        <button onClick={() => navigate(-1)} style={{ background: "transparent", border: `1px solid ${T.goldMuted}`, color: T.gold, padding: "7px 12px", fontSize: "10px", letterSpacing: "2px", cursor: "pointer", textTransform: "uppercase", width: "100%" }}>← Back</button>
       </aside>
 
       {/* MAIN */}
       <main style={{ marginLeft: "180px", flex: 1, padding: "60px 80px" }}>
         <div style={{ maxWidth: "680px" }}>
-          <div style={{ fontSize: "9px", letterSpacing: "6px", color: "#CBCBCB", textTransform: "uppercase", marginBottom: "12px" }}>Complete Booking</div>
-          <h1 style={{ fontSize: "36px", fontWeight: 300, margin: "0 0 4px", letterSpacing: "-0.5px" }}>{hotelName}</h1>
-          <div style={{ fontSize: "12px", color: "#867878", marginBottom: "40px" }}>
+          <div style={{ fontSize: "9px", letterSpacing: "6px", color: T.goldMuted, textTransform: "uppercase", marginBottom: "12px" }}>Complete Booking</div>
+          <h1 style={{ fontSize: "36px", fontWeight: 300, margin: "0 0 4px", letterSpacing: "-0.5px", color: T.text }}>{hotelName}</h1>
+          <div style={{ fontSize: "12px", color: T.textMuted, marginBottom: "40px" }}>
             {roomName} · {checkin} → {checkout} · {nights} night{nights > 1 ? "s" : ""} · {adults} guest{parseInt(adults) > 1 ? "s" : ""}
           </div>
 
-          {/* SUMMARY */}
-          <div style={{ border: "1px solid #D8D3CC", padding: "20px 24px", marginBottom: "40px", background: "#FAFAF8", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          {/* PRICE SUMMARY */}
+          <div style={{ border: `1px solid ${T.border}`, padding: "20px 24px", marginBottom: "40px", background: T.bgCard, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <div>
-              <div style={{ fontSize: "9px", letterSpacing: "3px", color: "#CBCBCB", textTransform: "uppercase", marginBottom: "5px" }}>Total Charge</div>
-              <div style={{ fontSize: "32px", color: "#1E1612", fontWeight: 300 }}>${price}</div>
-              <div style={{ fontSize: "10px", color: "#CBCBCB", textTransform: "uppercase", letterSpacing: "1px" }}>USD · {nights} night{nights > 1 ? "s" : ""}</div>
+              <div style={{ fontSize: "9px", letterSpacing: "3px", color: T.textFaint, textTransform: "uppercase", marginBottom: "5px" }}>Total Charge</div>
+              <div style={{ fontSize: "32px", color: T.text, fontWeight: 300 }}>${price}</div>
+              <div style={{ fontSize: "10px", color: T.textFaint, textTransform: "uppercase", letterSpacing: "1px" }}>USD · {nights} night{nights > 1 ? "s" : ""}</div>
             </div>
             <div style={{ textAlign: "right" }}>
-              <div style={{ fontSize: "9px", letterSpacing: "3px", color: "#4D2D1B", textTransform: "uppercase", marginBottom: "5px" }}>Your Commission</div>
-              <div style={{ fontSize: "28px", color: "#4D2D1B", fontWeight: 300 }}>+${commission}</div>
-              <div style={{ fontSize: "10px", color: "#867878" }}>{DEFAULT_MARGIN}% margin</div>
+              <div style={{ fontSize: "9px", letterSpacing: "3px", color: T.goldMuted, textTransform: "uppercase", marginBottom: "5px" }}>Your Commission</div>
+              <div style={{ fontSize: "28px", color: T.gold, fontWeight: 300 }}>+${commission}</div>
+              <div style={{ fontSize: "10px", color: T.textMuted }}>{DEFAULT_MARGIN}% margin</div>
             </div>
           </div>
 
           <form onSubmit={handleSubmit}>
-            <div style={{ fontSize: "9px", letterSpacing: "4px", color: "#CBCBCB", textTransform: "uppercase", marginBottom: "20px" }}>Guest Information</div>
+            <div style={{ fontSize: "9px", letterSpacing: "4px", color: T.textFaint, textTransform: "uppercase", marginBottom: "20px" }}>Guest Information</div>
 
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px", marginBottom: "24px" }}>
               {[["firstName","First Name *"],["lastName","Last Name *"]].map(([field, label]) => (
                 <div key={field}>
-                  <div style={{ fontSize: "9px", letterSpacing: "2px", color: "#CBCBCB", textTransform: "uppercase", marginBottom: "7px" }}>{label}</div>
-                  <input value={form[field]} onChange={e => setForm(f => ({ ...f, [field]: e.target.value }))} required
-                    style={{ width: "100%", background: "transparent", border: "none", borderBottom: "1px solid #D8D3CC", color: "#1E1612", padding: "7px 0", fontSize: "14px", outline: "none", fontFamily: "Georgia, serif", boxSizing: "border-box" }} />
+                  <div style={{ fontSize: "9px", letterSpacing: "2px", color: T.textFaint, textTransform: "uppercase", marginBottom: "7px" }}>{label}</div>
+                  <input value={form[field]} onChange={e => setForm(f => ({ ...f, [field]: e.target.value }))}
+                    required style={inputStyle(T)} />
                 </div>
               ))}
             </div>
 
             <div style={{ marginBottom: "24px" }}>
-              <div style={{ fontSize: "9px", letterSpacing: "2px", color: "#CBCBCB", textTransform: "uppercase", marginBottom: "7px" }}>Email Address *</div>
-              <input type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} required
-                style={{ width: "100%", background: "transparent", border: "none", borderBottom: "1px solid #D8D3CC", color: "#1E1612", padding: "7px 0", fontSize: "14px", outline: "none", fontFamily: "Georgia, serif", boxSizing: "border-box" }} />
+              <div style={{ fontSize: "9px", letterSpacing: "2px", color: T.textFaint, textTransform: "uppercase", marginBottom: "7px" }}>Email Address *</div>
+              <input type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
+                required style={inputStyle(T)} />
             </div>
 
             <div style={{ marginBottom: "24px" }}>
-              <div style={{ fontSize: "9px", letterSpacing: "2px", color: "#CBCBCB", textTransform: "uppercase", marginBottom: "7px" }}>Phone (Optional)</div>
-              <input value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))}
-                style={{ width: "100%", background: "transparent", border: "none", borderBottom: "1px solid #D8D3CC", color: "#1E1612", padding: "7px 0", fontSize: "14px", outline: "none", fontFamily: "Georgia, serif", boxSizing: "border-box" }} />
+              <div style={{ fontSize: "9px", letterSpacing: "2px", color: T.textFaint, textTransform: "uppercase", marginBottom: "7px" }}>Phone Number</div>
+              <input type="tel" value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))}
+                style={inputStyle(T)} />
             </div>
 
             <div style={{ marginBottom: "36px" }}>
-              <div style={{ fontSize: "9px", letterSpacing: "2px", color: "#CBCBCB", textTransform: "uppercase", marginBottom: "7px" }}>Special Requests (Optional)</div>
-              <textarea value={form.specialRequests} onChange={e => setForm(f => ({ ...f, specialRequests: e.target.value }))} rows={3}
-                style={{ width: "100%", background: "#FAFAF8", border: "1px solid #D8D3CC", color: "#1E1612", padding: "10px 12px", fontSize: "13px", outline: "none", fontFamily: "Georgia, serif", resize: "vertical", boxSizing: "border-box" }} />
+              <div style={{ fontSize: "9px", letterSpacing: "2px", color: T.textFaint, textTransform: "uppercase", marginBottom: "7px" }}>Special Requests</div>
+              <textarea value={form.specialRequests} onChange={e => setForm(f => ({ ...f, specialRequests: e.target.value }))}
+                rows={3} style={{ ...inputStyle(T), borderBottom: "none", border: `1px solid ${T.border}`, padding: "10px", resize: "vertical", background: T.bgCard }} />
             </div>
 
-            {error && <div style={{ color: "#4D2D1B", fontSize: "12px", marginBottom: "16px", padding: "10px 14px", border: "1px solid #D8D3CC", background: "#FBF8F5" }}>{error}</div>}
+            {error && <div style={{ color: "#E57373", fontSize: "12px", marginBottom: "20px", padding: "12px", background: "rgba(229,115,115,0.1)", border: "1px solid rgba(229,115,115,0.3)" }}>{error}</div>}
 
             <button type="submit" disabled={loading} style={{
-              width: "100%", background: loading ? "#CBCBCB" : "#1E1612", color: "#F0EDE8",
-              border: "none", padding: "16px", fontSize: "10px", letterSpacing: "4px", cursor: loading ? "not-allowed" : "pointer", textTransform: "uppercase",
-            }}>
-              {loading ? "Processing..." : `Confirm Booking · $${price}`}
+              background: loading ? T.border : T.gold, color: loading ? T.textFaint : T.bg,
+              border: "none", padding: "16px 48px", fontSize: "11px", letterSpacing: "3px",
+              cursor: loading ? "not-allowed" : "pointer", textTransform: "uppercase",
+              fontWeight: 600, width: "100%", transition: "all 0.2s",
+            }}
+              onMouseEnter={e => { if (!loading) e.currentTarget.style.background = T.goldLight; }}
+              onMouseLeave={e => { if (!loading) e.currentTarget.style.background = T.gold; }}>
+              {loading ? "Confirming..." : `Confirm Booking · $${price}`}
             </button>
           </form>
         </div>

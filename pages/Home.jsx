@@ -16,11 +16,28 @@ const DESTINATIONS = [
 const NAV_ITEMS = ["Rooms", "Gallery", "Conference Halls", "About", "Specials", "News", "Contact"];
 const RESTAURANT_ITEMS = ["Restaurant", "Lobby Bar", "Basement Bar", "Rooftop Bar"];
 
+// Theme tokens
+const T = {
+  bg: "#0B0F1A",
+  bgCard: "#111827",
+  bgCardHover: "#161D2E",
+  sidebar: "#0D1120",
+  border: "#1E2A3D",
+  borderLight: "#253045",
+  gold: "#C9A84C",
+  goldLight: "#E0C06A",
+  goldMuted: "#8A6E32",
+  text: "#F0EAD6",
+  textMuted: "#8A99B8",
+  textFaint: "#4A5568",
+  accent: "#1A2744",
+  white: "#FFFFFF",
+};
+
 export default function Home() {
   const navigate = useNavigate();
   const [form, setForm] = useState({ destination: "", checkin: today, checkout: tomorrow, adults: "2" });
   const [formError, setFormError] = useState("");
-  const [menuOpen, setMenuOpen] = useState(false);
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -30,252 +47,148 @@ export default function Home() {
     navigate(`/search?destination=${encodeURIComponent(form.destination)}&checkin=${form.checkin}&checkout=${form.checkout}&adults=${form.adults}`);
   };
 
-  return (
-    <div style={{
-      fontFamily: "'Georgia', 'Times New Roman', serif",
-      backgroundColor: "#F0EDE8",
-      color: "#1E1612",
-      minHeight: "100vh",
-      display: "flex",
-    }}>
+  const inputStyle = {
+    width: "100%", background: "transparent", border: "none",
+    borderBottom: `1px solid ${T.border}`, color: T.text,
+    fontSize: "14px", padding: "6px 0", outline: "none",
+    fontFamily: "Georgia, serif", boxSizing: "border-box",
+    colorScheme: "dark",
+  };
+  const labelStyle = { fontSize: "9px", letterSpacing: "3px", color: T.textFaint, textTransform: "uppercase", marginBottom: "8px" };
 
-      {/* LEFT SIDEBAR NAV — Neringa style */}
+  return (
+    <div style={{ fontFamily: "'Georgia','Times New Roman',serif", backgroundColor: T.bg, color: T.text, minHeight: "100vh", display: "flex" }}>
+
+      {/* LEFT SIDEBAR */}
       <aside style={{
-        width: "180px",
-        minWidth: "180px",
-        padding: "28px 20px",
-        borderRight: "1px solid #D8D3CC",
-        display: "flex",
-        flexDirection: "column",
-        justifyContent: "space-between",
-        position: "fixed",
-        top: 0,
-        left: 0,
-        bottom: 0,
-        zIndex: 50,
-        background: "#F0EDE8",
-        overflowY: "auto",
+        width: "180px", minWidth: "180px", padding: "28px 20px",
+        borderRight: `1px solid ${T.border}`, display: "flex", flexDirection: "column", justifyContent: "space-between",
+        position: "fixed", top: 0, left: 0, bottom: 0, zIndex: 50, background: T.sidebar, overflowY: "auto",
       }}>
         <div>
-          {/* Brand */}
-          <div style={{ marginBottom: "36px" }}>
-            <div style={{ fontSize: "11px", letterSpacing: "3px", color: "#1E1612", fontWeight: 400, textTransform: "uppercase", cursor: "pointer" }}
-              onClick={() => navigate("/")}>
-              RACKU VOYAGE
-            </div>
-          </div>
-
-          {/* Primary nav */}
+          <div style={{ fontSize: "11px", letterSpacing: "3px", color: T.gold, fontWeight: 400, textTransform: "uppercase", marginBottom: "36px", cursor: "pointer" }}
+            onClick={() => navigate("/")}>RACKU VOYAGE</div>
           {NAV_ITEMS.map(item => (
-            <div key={item} style={{
-              fontSize: "12px", color: "#46424A", marginBottom: "10px",
-              cursor: "pointer", letterSpacing: "0.5px", lineHeight: 1.4,
-              transition: "color 0.2s",
-            }}
-              onMouseEnter={e => e.target.style.color = "#1E1612"}
-              onMouseLeave={e => e.target.style.color = "#46424A"}
-              onClick={() => navigate("/")}
-            >{item}</div>
+            <div key={item} style={{ fontSize: "12px", color: T.textMuted, marginBottom: "10px", cursor: "pointer", letterSpacing: "0.5px", transition: "color 0.2s" }}
+              onMouseEnter={e => e.currentTarget.style.color = T.gold}
+              onMouseLeave={e => e.currentTarget.style.color = T.textMuted}
+              onClick={() => navigate("/")}>{item}</div>
           ))}
-
-          {/* Divider */}
-          <div style={{ height: "1px", background: "#D8D3CC", margin: "18px 0" }} />
-
-          {/* Restaurant sub-nav */}
+          <div style={{ height: "1px", background: T.border, margin: "18px 0" }} />
           {RESTAURANT_ITEMS.map(item => (
-            <div key={item} style={{
-              fontSize: "11px", color: "#867878", marginBottom: "9px",
-              cursor: "pointer", letterSpacing: "0.5px",
-              transition: "color 0.2s",
-            }}
-              onMouseEnter={e => e.target.style.color = "#4D2D1B"}
-              onMouseLeave={e => e.target.style.color = "#867878"}
-            >{item}</div>
+            <div key={item} style={{ fontSize: "11px", color: T.textFaint, marginBottom: "9px", cursor: "pointer", letterSpacing: "0.5px", transition: "color 0.2s" }}
+              onMouseEnter={e => e.currentTarget.style.color = T.textMuted}
+              onMouseLeave={e => e.currentTarget.style.color = T.textFaint}>{item}</div>
           ))}
         </div>
-
-        <div>
-          <button onClick={() => navigate("/dashboard")} style={{
-            background: "transparent", border: "1px solid #CBCBCB", color: "#46424A",
-            padding: "7px 12px", fontSize: "10px", letterSpacing: "2px", cursor: "pointer",
-            textTransform: "uppercase", width: "100%",
-          }}>Dashboard</button>
-        </div>
+        <button onClick={() => navigate("/dashboard")} style={{
+          background: "transparent", border: `1px solid ${T.goldMuted}`, color: T.gold,
+          padding: "7px 12px", fontSize: "10px", letterSpacing: "2px", cursor: "pointer",
+          textTransform: "uppercase", width: "100%", transition: "all 0.2s",
+        }}
+          onMouseEnter={e => { e.currentTarget.style.background = T.gold; e.currentTarget.style.color = T.bg; }}
+          onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = T.gold; }}>
+          Dashboard
+        </button>
       </aside>
 
-      {/* MAIN CONTENT */}
+      {/* MAIN */}
       <main style={{ marginLeft: "180px", flex: 1, display: "flex", flexDirection: "column" }}>
 
         {/* TOP BAR */}
-        <div style={{
-          display: "flex", justifyContent: "flex-end", alignItems: "center",
-          padding: "20px 48px", borderBottom: "1px solid #D8D3CC",
-        }}>
-          <span style={{ fontSize: "11px", letterSpacing: "2px", color: "#867878", marginRight: "24px" }}>EN</span>
-          <div style={{ cursor: "pointer" }} onClick={() => setMenuOpen(!menuOpen)}>
-            <div style={{ width: "22px", height: "1px", background: "#1E1612", marginBottom: "5px" }} />
-            <div style={{ width: "22px", height: "1px", background: "#1E1612", marginBottom: "5px" }} />
-            <div style={{ width: "14px", height: "1px", background: "#1E1612" }} />
+        <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", padding: "20px 48px", borderBottom: `1px solid ${T.border}` }}>
+          <span style={{ fontSize: "11px", letterSpacing: "2px", color: T.textFaint, marginRight: "24px" }}>EN</span>
+          <div style={{ cursor: "pointer", display: "flex", flexDirection: "column", gap: "5px" }}>
+            <div style={{ width: "22px", height: "1px", background: T.gold }} />
+            <div style={{ width: "22px", height: "1px", background: T.gold }} />
+            <div style={{ width: "14px", height: "1px", background: T.gold }} />
           </div>
         </div>
 
-        {/* HERO SECTION */}
+        {/* HERO */}
         <div style={{ display: "flex", flex: 1, minHeight: "calc(100vh - 61px)" }}>
 
-          {/* Left: text + search */}
-          <div style={{ flex: 1, padding: "60px 48px 60px 48px", display: "flex", flexDirection: "column", justifyContent: "center" }}>
-            <div style={{ fontSize: "11px", letterSpacing: "5px", color: "#867878", textTransform: "uppercase", marginBottom: "20px" }}>
+          {/* Left: text + form */}
+          <div style={{ flex: 1, padding: "60px 48px", display: "flex", flexDirection: "column", justifyContent: "center" }}>
+            <div style={{ fontSize: "11px", letterSpacing: "5px", color: T.goldMuted, textTransform: "uppercase", marginBottom: "20px" }}>
               Hotel Rooms
             </div>
-
-            <h1 style={{
-              fontSize: "clamp(52px, 7vw, 96px)",
-              fontWeight: 300,
-              lineHeight: 1.05,
-              margin: "0 0 12px",
-              color: "#1E1612",
-              letterSpacing: "-1px",
-            }}>
+            <h1 style={{ fontSize: "clamp(52px, 7vw, 96px)", fontWeight: 300, lineHeight: 1.05, margin: "0 0 12px", color: T.text, letterSpacing: "-1px" }}>
               Find Your<br />
-              <span style={{ fontStyle: "italic", color: "#4D2D1B" }}>Perfect Stay</span>
+              <span style={{ fontStyle: "italic", color: T.gold }}>Perfect Stay</span>
             </h1>
-
-            <p style={{
-              fontSize: "14px", color: "#867878", lineHeight: 1.9,
-              maxWidth: "400px", marginBottom: "48px", letterSpacing: "0.3px",
-            }}>
+            <p style={{ fontSize: "14px", color: T.textMuted, lineHeight: 1.9, maxWidth: "400px", marginBottom: "48px", letterSpacing: "0.3px" }}>
               Discover handpicked luxury hotels across the world's most breathtaking destinations. Every stay, curated.
             </p>
 
-            {/* SEARCH FORM — Neringa minimal style */}
+            {/* SEARCH FORM */}
             <form onSubmit={handleSearch} style={{
-              background: "#FAFAF8",
-              border: "1px solid #D8D3CC",
-              padding: "28px 32px",
-              maxWidth: "580px",
+              background: T.bgCard, border: `1px solid ${T.border}`, padding: "28px 32px", maxWidth: "600px",
             }}>
               <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", gap: "20px", marginBottom: "20px" }}>
                 <div>
-                  <div style={{ fontSize: "9px", letterSpacing: "3px", color: "#CBCBCB", textTransform: "uppercase", marginBottom: "8px" }}>Destination</div>
-                  <input
-                    type="text"
-                    placeholder="City, country..."
-                    value={form.destination}
+                  <div style={labelStyle}>Destination</div>
+                  <input type="text" placeholder="City, country..." value={form.destination}
                     onChange={e => setForm(f => ({ ...f, destination: e.target.value }))}
-                    style={{
-                      width: "100%", background: "transparent", border: "none",
-                      borderBottom: "1px solid #D8D3CC", color: "#1E1612",
-                      fontSize: "14px", padding: "6px 0", outline: "none",
-                      fontFamily: "Georgia, serif", boxSizing: "border-box",
-                    }}
+                    style={{ ...inputStyle }}
                   />
                 </div>
                 <div>
-                  <div style={{ fontSize: "9px", letterSpacing: "3px", color: "#CBCBCB", textTransform: "uppercase", marginBottom: "8px" }}>Check In</div>
+                  <div style={labelStyle}>Check In</div>
                   <input type="date" value={form.checkin} min={today}
                     onChange={e => setForm(f => ({ ...f, checkin: e.target.value }))}
-                    style={{
-                      width: "100%", background: "transparent", border: "none",
-                      borderBottom: "1px solid #D8D3CC", color: "#1E1612",
-                      fontSize: "13px", padding: "6px 0", outline: "none", boxSizing: "border-box",
-                    }}
+                    style={{ ...inputStyle }}
                   />
                 </div>
                 <div>
-                  <div style={{ fontSize: "9px", letterSpacing: "3px", color: "#CBCBCB", textTransform: "uppercase", marginBottom: "8px" }}>Check Out</div>
+                  <div style={labelStyle}>Check Out</div>
                   <input type="date" value={form.checkout} min={form.checkin || tomorrow}
                     onChange={e => setForm(f => ({ ...f, checkout: e.target.value }))}
-                    style={{
-                      width: "100%", background: "transparent", border: "none",
-                      borderBottom: "1px solid #D8D3CC", color: "#1E1612",
-                      fontSize: "13px", padding: "6px 0", outline: "none", boxSizing: "border-box",
-                    }}
+                    style={{ ...inputStyle }}
                   />
                 </div>
               </div>
-
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "16px" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                  <div style={{ fontSize: "9px", letterSpacing: "3px", color: "#CBCBCB", textTransform: "uppercase" }}>Guests</div>
+                  <div style={labelStyle}>Guests</div>
                   <select value={form.adults} onChange={e => setForm(f => ({ ...f, adults: e.target.value }))}
-                    style={{
-                      background: "transparent", border: "none", borderBottom: "1px solid #D8D3CC",
-                      color: "#1E1612", fontSize: "13px", padding: "4px 0", outline: "none", cursor: "pointer",
-                    }}>
-                    {[1,2,3,4,5,6].map(n => <option key={n} value={n} style={{ background: "#FAFAF8" }}>{n} Adult{n>1?"s":""}</option>)}
+                    style={{ background: T.bgCard, border: "none", borderBottom: `1px solid ${T.border}`, color: T.text, fontSize: "13px", padding: "4px 0", outline: "none", cursor: "pointer" }}>
+                    {[1,2,3,4,5,6].map(n => <option key={n} value={n} style={{ background: T.bgCard }}>{n} Adult{n>1?"s":""}</option>)}
                   </select>
                 </div>
-
                 <button type="submit" style={{
-                  background: "#1E1612", color: "#F0EDE8", border: "none",
-                  padding: "12px 28px", fontSize: "10px", letterSpacing: "3px",
-                  cursor: "pointer", textTransform: "uppercase",
-                }}>
+                  background: T.gold, color: T.bg, border: "none", padding: "12px 36px",
+                  fontSize: "10px", letterSpacing: "3px", cursor: "pointer", textTransform: "uppercase",
+                  fontWeight: 600, transition: "all 0.2s",
+                }}
+                  onMouseEnter={e => e.currentTarget.style.background = T.goldLight}
+                  onMouseLeave={e => e.currentTarget.style.background = T.gold}>
                   Search
                 </button>
               </div>
-
-              {formError && (
-                <div style={{ marginTop: "12px", fontSize: "11px", color: "#4D2D1B", letterSpacing: "1px" }}>
-                  {formError}
-                </div>
-              )}
+              {formError && <div style={{ color: "#E57373", fontSize: "11px", marginTop: "12px" }}>{formError}</div>}
             </form>
           </div>
 
-          {/* Right: hero image */}
-          <div style={{ width: "420px", minWidth: "360px", position: "relative", overflow: "hidden" }}>
-            <img
-              src="https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?w=900&q=85"
-              alt="Luxury hotel"
-              style={{ width: "100%", height: "100%", objectFit: "cover" }}
-            />
-            <div style={{
-              position: "absolute", inset: 0,
-              background: "linear-gradient(to right, rgba(240,237,232,0.3) 0%, transparent 40%)",
-            }} />
-          </div>
-        </div>
-
-        {/* DESTINATIONS STRIP */}
-        <div style={{ padding: "60px 48px", borderTop: "1px solid #D8D3CC" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: "32px" }}>
-            <div>
-              <div style={{ fontSize: "9px", letterSpacing: "5px", color: "#CBCBCB", textTransform: "uppercase", marginBottom: "8px" }}>Explore</div>
-              <h2 style={{ fontSize: "32px", fontWeight: 300, margin: 0, color: "#1E1612", letterSpacing: "-0.5px" }}>
-                Popular Destinations
-              </h2>
-            </div>
-            <div style={{ fontSize: "11px", color: "#867878", letterSpacing: "2px", cursor: "pointer" }}>
-              View all →
-            </div>
-          </div>
-
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: "12px" }}>
+          {/* Right: destination grid */}
+          <div style={{ width: "420px", minWidth: "420px", display: "grid", gridTemplateColumns: "1fr 1fr", gridTemplateRows: "repeat(3, 1fr)", gap: "2px", height: "calc(100vh - 61px)", overflow: "hidden" }}>
             {DESTINATIONS.map(d => (
-              <div
-                key={d.city}
-                onClick={() => navigate(`/search?destination=${encodeURIComponent(d.city + ", " + d.country)}&checkin=${today}&checkout=${tomorrow}&adults=2`)}
-                style={{ cursor: "pointer" }}
+              <div key={d.city} onClick={() => setForm(f => ({ ...f, destination: `${d.city}, ${d.country}` }))}
+                style={{ position: "relative", overflow: "hidden", cursor: "pointer" }}
               >
-                <div style={{ position: "relative", paddingBottom: "130%", overflow: "hidden", marginBottom: "10px" }}>
-                  <img src={d.img} alt={d.city}
-                    style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", transition: "transform 0.5s ease" }}
-                    onMouseEnter={e => e.target.style.transform = "scale(1.05)"}
-                    onMouseLeave={e => e.target.style.transform = "scale(1)"}
-                  />
+                <img src={d.img} alt={d.city}
+                  onError={e => { e.target.style.background = T.bgCard; }}
+                  style={{ width: "100%", height: "100%", objectFit: "cover", display: "block", transition: "transform 0.5s", filter: "brightness(0.65)" }}
+                  onMouseEnter={e => { e.target.style.transform = "scale(1.06)"; e.target.style.filter = "brightness(0.85)"; }}
+                  onMouseLeave={e => { e.target.style.transform = "scale(1)"; e.target.style.filter = "brightness(0.65)"; }}
+                />
+                <div style={{ position: "absolute", bottom: "12px", left: "14px" }}>
+                  <div style={{ fontSize: "13px", color: T.white, letterSpacing: "0.5px" }}>{d.city}</div>
+                  <div style={{ fontSize: "10px", color: T.gold, letterSpacing: "1px" }}>{d.country}</div>
                 </div>
-                <div style={{ fontSize: "13px", color: "#1E1612", marginBottom: "2px" }}>{d.city}</div>
-                <div style={{ fontSize: "10px", color: "#867878", letterSpacing: "1px" }}>{d.country}</div>
               </div>
             ))}
           </div>
-        </div>
-
-        {/* FOOTER */}
-        <div style={{ borderTop: "1px solid #D8D3CC", padding: "24px 48px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <div style={{ fontSize: "11px", color: "#CBCBCB", letterSpacing: "2px" }}>RACKU VOYAGE</div>
-          <div style={{ fontSize: "11px", color: "#CBCBCB" }}>© 2026 All rights reserved.</div>
         </div>
       </main>
     </div>
