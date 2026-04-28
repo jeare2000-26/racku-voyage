@@ -10,7 +10,7 @@ const RESTAURANT_ITEMS = ["Restaurant", "Lobby Bar", "Basement Bar", "Rooftop Ba
 // Isolated card component to prevent event bubbling issues
 function HotelCard({ hotel, checkin, checkout, adults, navigate }) {
   const [hovered, setHovered] = useState(false);
-  const url = `/hotel/${hotel.id}?checkin=${checkin}&checkout=${checkout}&adults=${adults}&hotelName=${encodeURIComponent(hotel.name)}`;
+  const url = `/hotel?hotelId=${hotel.id}&checkin=${checkin}&checkout=${checkout}&adults=${adults}&hotelName=${encodeURIComponent(hotel.name)}`;
 
   return (
     <div

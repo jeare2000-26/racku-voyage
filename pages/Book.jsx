@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Booking } from "@/api/entities";
 
 const LITEAPI_KEY = "prod_4924ac14-f585-4c07-98cf-51ea994bdcaf";
@@ -8,7 +8,7 @@ const NAV_ITEMS = ["Rooms", "Gallery", "Conference Halls", "About", "Specials", 
 const RESTAURANT_ITEMS = ["Restaurant", "Lobby Bar", "Basement Bar", "Rooftop Bar"];
 
 export default function Book() {
-  const { id } = useParams();
+  
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [form, setForm] = useState({ firstName: "", lastName: "", email: "", phone: "", specialRequests: "" });
@@ -16,6 +16,7 @@ export default function Book() {
   const [error, setError] = useState("");
   const [confirmed, setConfirmed] = useState(null);
 
+  const id = searchParams.get("hotelId") || "";
   const rateId = searchParams.get("rateId") || "";
   const checkin = searchParams.get("checkin") || "";
   const checkout = searchParams.get("checkout") || "";

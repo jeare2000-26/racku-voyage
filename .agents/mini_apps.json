@@ -5,17 +5,17 @@
     "Home": {
       "title": "Home"
     },
-    "Hotel": {
-      "title": "Hotel"
-    },
-    "Book": {
-      "title": "Book"
-    },
     "Dashboard": {
       "title": "Dashboard"
     },
     "Search": {
       "title": "Search"
+    },
+    "Hotel": {
+      "title": "Hotel"
+    },
+    "Book": {
+      "title": "Book"
     }
   }
 }

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
 const LITEAPI_KEY = "prod_4924ac14-f585-4c07-98cf-51ea994bdcaf";
 const DEFAULT_MARGIN = 15;
@@ -12,9 +12,15 @@ function stripHtml(html) {
 }
 
 export default function Hotel() {
-  const { id } = useParams();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+
+  // Read hotelId from query param (not useParams)
+  const id = searchParams.get("hotelId");
+  const checkin = searchParams.get("checkin");
+  const checkout = searchParams.get("checkout");
+  const adults = searchParams.get("adults") || "2";
+
   const [hotel, setHotel] = useState(null);
   const [rates, setRates] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -22,35 +28,47 @@ export default function Hotel() {
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [activeImg, setActiveImg] = useState(0);
 
-  const checkin = searchParams.get("checkin");
-  const checkout = searchParams.get("checkout");
-  const adults = searchParams.get("adults") || "2";
-  const nights = checkin && checkout ? Math.max(1, Math.ceil((new Date(checkout) - new Date(checkin)) / 86400000)) : 1;
+  const nights = checkin && checkout
+    ? Math.max(1, Math.ceil((new Date(checkout) - new Date(checkin)) / 86400000))
+    : 1;
 
   useEffect(() => {
-    const fetch_ = async () => {
+    if (!id) { setError("No hotel ID provided."); setLoading(false); return; }
+
+    const load = async () => {
       setLoading(true); setError("");
       try {
-        const [hRes, rRes] = await Promise.all([
-          fetch(`https://api.liteapi.travel/v3.0/data/hotel?hotelId=${id}`, { headers: { "X-API-Key": LITEAPI_KEY } }),
-          checkin && checkout ? fetch("https://api.liteapi.travel/v3.0/hotels/rates", {
-            method: "POST", headers: { "X-API-Key": LITEAPI_KEY, "Content-Type": "application/json" },
-            body: JSON.stringify({ hotelIds: [id], checkin, checkout, occupancies: [{ adults: parseInt(adults) }], currency: "USD", guestNationality: "US", margin: DEFAULT_MARGIN }),
-          }) : Promise.resolve(null),
-        ]);
+        const hRes = await fetch(
+          `https://api.liteapi.travel/v3.0/data/hotel?hotelId=${id}`,
+          { headers: { "X-API-Key": LITEAPI_KEY } }
+        );
         const hJson = await hRes.json();
         if (!hJson.data) { setError("Hotel not found."); setLoading(false); return; }
         setHotel(hJson.data);
-        if (rRes) {
+
+        if (checkin && checkout) {
+          const rRes = await fetch("https://api.liteapi.travel/v3.0/hotels/rates", {
+            method: "POST",
+            headers: { "X-API-Key": LITEAPI_KEY, "Content-Type": "application/json" },
+            body: JSON.stringify({
+              hotelIds: [id],
+              checkin, checkout,
+              occupancies: [{ adults: parseInt(adults) || 2 }],
+              currency: "USD", guestNationality: "US", margin: DEFAULT_MARGIN,
+            }),
+          });
           const rJson = await rRes.json();
           const rooms = rJson.data?.find(r => r.hotelId === id)?.roomTypes || [];
           setRates(rooms);
           if (rooms.length) setSelectedRoom(rooms[0]);
         }
-      } catch (err) { setError("Failed to load hotel."); }
+      } catch (err) {
+        setError("Failed to load hotel details.");
+        console.error(err);
+      }
       setLoading(false);
     };
-    fetch_();
+    load();
   }, [id, checkin, checkout, adults]);
 
   if (loading) return (
@@ -72,12 +90,16 @@ export default function Hotel() {
   const mainPhoto = photos[activeImg] || "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?w=1200&q=80";
   const facilities = hotel.hotelFacilities || [];
   const description = stripHtml(hotel.hotelDescription || hotel.description || "");
-  const addressStr = typeof hotel.address === "string" ? hotel.address : [hotel.address?.line1, hotel.address?.city, hotel.address?.country].filter(Boolean).join(", ");
+  const addressStr = typeof hotel.address === "string"
+    ? hotel.address
+    : [hotel.address?.line1, hotel.address?.city, hotel.address?.country].filter(Boolean).join(", ");
 
   const selectedRate = selectedRoom?.rates?.[0];
   const selectedPrice = selectedRate?.retailRate?.total?.[0]?.amount || 0;
   const totalPrice = Math.round(selectedPrice * nights);
   const totalCommission = Math.round(totalPrice * DEFAULT_MARGIN / 100);
+
+  const bookUrl = `/book?hotelId=${id}&rateId=${encodeURIComponent(selectedRate?.rateId || "")}&checkin=${checkin}&checkout=${checkout}&adults=${adults}&hotelName=${encodeURIComponent(hotel.name)}&roomName=${encodeURIComponent(selectedRoom?.name || "")}&price=${totalPrice}&commission=${totalCommission}`;
 
   return (
     <div style={{ fontFamily: "'Georgia','Times New Roman',serif", backgroundColor: "#F0EDE8", color: "#1E1612", minHeight: "100vh", display: "flex" }}>
@@ -93,13 +115,13 @@ export default function Hotel() {
             onClick={() => navigate("/")}>RACKU VOYAGE</div>
           {NAV_ITEMS.map(item => (
             <div key={item} style={{ fontSize: "12px", color: "#46424A", marginBottom: "10px", cursor: "pointer" }}
-              onMouseEnter={e => e.target.style.color = "#1E1612"}
-              onMouseLeave={e => e.target.style.color = "#46424A"}
+              onMouseEnter={e => e.currentTarget.style.color = "#1E1612"}
+              onMouseLeave={e => e.currentTarget.style.color = "#46424A"}
               onClick={() => navigate("/")}>{item}</div>
           ))}
           <div style={{ height: "1px", background: "#D8D3CC", margin: "18px 0" }} />
           {RESTAURANT_ITEMS.map(item => (
-            <div key={item} style={{ fontSize: "11px", color: "#867878", marginBottom: "9px", cursor: "pointer" }}>{item}</div>
+            <div key={item} style={{ fontSize: "11px", color: "#867878", marginBottom: "9px" }}>{item}</div>
           ))}
         </div>
         <button onClick={() => navigate(-1)} style={{
@@ -118,7 +140,6 @@ export default function Hotel() {
             style={{ width: "100%", height: "100%", objectFit: "cover" }}
           />
           <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, rgba(240,237,232,0) 40%, rgba(240,237,232,1) 100%)" }} />
-          {/* Back button overlay */}
           <button onClick={() => navigate(-1)} style={{
             position: "absolute", top: "24px", right: "32px",
             background: "rgba(240,237,232,0.9)", border: "1px solid #D8D3CC", color: "#1E1612",
@@ -128,11 +149,11 @@ export default function Hotel() {
 
         {/* PHOTO STRIP */}
         {photos.length > 1 && (
-          <div style={{ display: "flex", gap: "4px", padding: "0 48px 0", overflowX: "auto", background: "#F0EDE8" }}>
+          <div style={{ display: "flex", gap: "4px", padding: "8px 48px", overflowX: "auto", background: "#F0EDE8" }}>
             {photos.slice(0, 8).map((url, i) => (
               <img key={i} src={url} alt="" onClick={() => setActiveImg(i)}
                 onError={e => { e.target.style.display = "none"; }}
-                style={{ width: "80px", height: "52px", objectFit: "cover", cursor: "pointer", flexShrink: 0, border: `1px solid ${activeImg === i ? "#1E1612" : "transparent"}`, opacity: activeImg === i ? 1 : 0.55, transition: "all 0.2s" }}
+                style={{ width: "80px", height: "52px", objectFit: "cover", cursor: "pointer", flexShrink: 0, border: `1px solid ${activeImg === i ? "#1E1612" : "transparent"}`, opacity: activeImg === i ? 1 : 0.5, transition: "all 0.2s" }}
               />
             ))}
           </div>
@@ -140,15 +161,19 @@ export default function Hotel() {
 
         {/* CONTENT */}
         <div style={{ display: "flex", padding: "40px 48px 60px", gap: "48px" }}>
-          {/* LEFT */}
+
+          {/* LEFT — Details */}
           <div style={{ flex: 1 }}>
             {(hotel.stars || 0) > 0 && (
-              <div style={{ fontSize: "11px", color: "#867878", marginBottom: "10px", letterSpacing: "2px" }}>{"★".repeat(Math.min(Math.round(hotel.stars || 0), 5))}</div>
+              <div style={{ fontSize: "11px", color: "#867878", marginBottom: "10px", letterSpacing: "2px" }}>
+                {"★".repeat(Math.min(Math.round(hotel.stars || 0), 5))}
+              </div>
             )}
-            <h1 style={{ fontSize: "clamp(28px, 3.5vw, 44px)", fontWeight: 300, margin: "0 0 8px", letterSpacing: "-0.5px" }}>{hotel.name}</h1>
-            <div style={{ fontSize: "12px", color: "#867878", marginBottom: "28px" }}>
-              {addressStr && <span>{addressStr}</span>}
-            </div>
+            <h1 style={{ fontSize: "clamp(28px, 3.5vw, 44px)", fontWeight: 300, margin: "0 0 8px", letterSpacing: "-0.5px" }}>
+              {hotel.name}
+            </h1>
+            <div style={{ fontSize: "12px", color: "#867878", marginBottom: "28px" }}>{addressStr}</div>
+
             {hotel.rating > 0 && (
               <div style={{ display: "inline-flex", alignItems: "center", gap: "10px", marginBottom: "32px" }}>
                 <span style={{ background: "#1E1612", color: "#F0EDE8", padding: "3px 10px", fontSize: "12px" }}>{hotel.rating}/10</span>
@@ -171,14 +196,14 @@ export default function Hotel() {
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "8px 24px" }}>
                   {facilities.slice(0, 16).map((f, i) => (
                     <div key={i} style={{ fontSize: "12px", color: "#46424A", display: "flex", alignItems: "center", gap: "8px" }}>
-                      <span style={{ color: "#CBCBCB", fontSize: "10px" }}>—</span> {f}
+                      <span style={{ color: "#CBCBCB" }}>—</span> {f}
                     </div>
                   ))}
                 </div>
               </div>
             )}
 
-            {/* ROOMS */}
+            {/* ROOM SELECTION */}
             {rates.length > 0 && (
               <div>
                 <div style={{ fontSize: "9px", letterSpacing: "4px", color: "#CBCBCB", textTransform: "uppercase", marginBottom: "14px" }}>Select Room</div>
@@ -197,10 +222,7 @@ export default function Hotel() {
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                           <div>
                             <div style={{ fontSize: "14px", marginBottom: "4px" }}>{room.name || `Room ${idx + 1}`}</div>
-                            <div style={{ fontSize: "11px", color: "#867878" }}>
-                              {rate?.boardName || "Room Only"}
-                              {rate?.cancellationPolicies?.cancelPolicyInfos?.length > 0 ? " · Free Cancellation" : ""}
-                            </div>
+                            <div style={{ fontSize: "11px", color: "#867878" }}>{rate?.boardName || "Room Only"}</div>
                           </div>
                           {price > 0 && (
                             <div style={{ textAlign: "right" }}>
@@ -218,7 +240,7 @@ export default function Hotel() {
             )}
           </div>
 
-          {/* BOOKING SIDEBAR */}
+          {/* RIGHT — Booking summary */}
           <div style={{ width: "270px", minWidth: "270px" }}>
             <div style={{ border: "1px solid #D8D3CC", padding: "24px", background: "#FAFAF8", position: "sticky", top: "20px" }}>
               <div style={{ fontSize: "9px", letterSpacing: "4px", color: "#CBCBCB", textTransform: "uppercase", marginBottom: "18px" }}>Your Booking</div>
@@ -231,9 +253,9 @@ export default function Hotel() {
                 ["Guests", `${adults} Adult${parseInt(adults) > 1 ? "s" : ""}`],
                 ["Room", selectedRoom?.name || "—"],
               ].map(([k, v]) => (
-                <div key={k} style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", borderBottom: "1px solid #EDEAE6" }}>
+                <div key={k} style={{ display: "flex", justifyContent: "space-between", padding: "7px 0", borderBottom: "1px solid #EDEAE6" }}>
                   <span style={{ fontSize: "9px", letterSpacing: "2px", color: "#CBCBCB", textTransform: "uppercase" }}>{k}</span>
-                  <span style={{ fontSize: "11px", color: "#46424A", textAlign: "right", maxWidth: "150px" }}>{v}</span>
+                  <span style={{ fontSize: "11px", color: "#46424A", textAlign: "right", maxWidth: "150px" }}>{String(v)}</span>
                 </div>
               ))}
 
@@ -242,30 +264,26 @@ export default function Hotel() {
                   <div style={{ marginTop: "14px", paddingTop: "14px", borderTop: "1px solid #D8D3CC" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px" }}>
                       <span style={{ fontSize: "11px", color: "#867878" }}>${Math.round(selectedPrice)} × {nights} night{nights > 1 ? "s" : ""}</span>
-                      <span style={{ fontSize: "13px", color: "#1E1612", fontWeight: 400 }}>${totalPrice}</span>
+                      <span style={{ fontSize: "13px", color: "#1E1612" }}>${totalPrice}</span>
                     </div>
                     <div style={{ display: "flex", justifyContent: "space-between" }}>
-                      <span style={{ fontSize: "10px", color: "#4D2D1B" }}>Commission</span>
+                      <span style={{ fontSize: "10px", color: "#4D2D1B" }}>Commission ({DEFAULT_MARGIN}%)</span>
                       <span style={{ fontSize: "12px", color: "#4D2D1B" }}>+${totalCommission}</span>
                     </div>
                   </div>
 
-                  <div style={{ padding: "10px 14px", border: "1px solid #D8D3CC", margin: "14px 0 18px", background: "#F5F2EE" }}>
-                    <div style={{ fontSize: "9px", letterSpacing: "2px", color: "#867878", textTransform: "uppercase", marginBottom: "2px" }}>Margin Applied</div>
-                    <div style={{ fontSize: "20px", color: "#4D2D1B", fontWeight: 300 }}>{DEFAULT_MARGIN}%</div>
-                  </div>
-
                   <button
-                    onClick={() => navigate(`/book/${id}?rateId=${encodeURIComponent(selectedRate?.rateId || "")}&checkin=${checkin}&checkout=${checkout}&adults=${adults}&hotelName=${encodeURIComponent(hotel.name)}&roomName=${encodeURIComponent(selectedRoom?.name || "")}&price=${totalPrice}&commission=${totalCommission}`)}
-                    style={{ width: "100%", background: "#1E1612", color: "#F0EDE8", border: "none", padding: "14px", fontSize: "10px", letterSpacing: "3px", cursor: "pointer", textTransform: "uppercase" }}>
+                    type="button"
+                    onClick={() => navigate(bookUrl)}
+                    style={{ width: "100%", background: "#1E1612", color: "#F0EDE8", border: "none", padding: "14px", fontSize: "10px", letterSpacing: "3px", cursor: "pointer", textTransform: "uppercase", marginTop: "18px" }}>
                     Book Now · ${totalPrice}
                   </button>
                 </>
               )}
 
-              {rates.length === 0 && (
+              {rates.length === 0 && !loading && (
                 <div style={{ marginTop: "14px", fontSize: "11px", color: "#CBCBCB", textAlign: "center", lineHeight: 1.8 }}>
-                  Select dates to view rates.
+                  No availability for these dates.
                 </div>
               )}
             </div>
