@@ -1,39 +1,33 @@
-# Changelog
+# Changelog — April 28, 2026
 
-## [Current] �S Apr 27, 2026
+## System Status
+- App is live and operational
+- All 5 pages deployed (Home, Search, Hotel, Book, Dashboard)
+- LiteAPI integration working with 15% margin
+- Booking entity fully schemaed with descriptions
 
-### Fixed
-- **Search page field mapping** �S Fixed useEffect dependency array to properly trigger search when URL params change. Previously, changing search parameters wouldn't re-fire the API call.
-- **Hotel detail page API fields** – Corrected field names from LiteAPI response:
-  - `images` ℃ `hotelImages`
-  - `facilities` ℃ `hotelFacilities`
-  - `description` ℃ `hotelDescription`
-  - `address` object handling for plain string responses
-- **Hotel page display** �S Hotels now load properly with correct photos, amenities, room data, and pricing.
-- **Commission display** – Fixed calculation and display of per-night and total commission for bookings.
+## Entities
+- Booking: Full schema with field descriptions, enums, defaults
+  - Status enum: pending, confirmed, cancelled, completed
+  - Payout enum: pending, paid
+  - Currency defaults to USD
 
-### Features
-- Search redirects to `/search?destination=...&checkin=...&checkout=...&adults=...` with full state in URL
-- Hotel detail page sticky sidebar with booking summary and real-time pricing
-- 15% margin applied to all rates from LiteAPI
-- Room selection with free cancellation badges
-- Total price and commission calculations
+## Automations (Active)
+1. Auto-commit to GitHub — Runs daily at 09:00 UTC
+2. New Booking Alert — Triggers on new Booking records
 
-### Known Issues
-- Book.jsx and Dashboard.jsx still need full LiteAPI integration for complete booking flow
-- No payment processing yet (placeholder stage)
+## Recent Fixes
+- Fixed Search.jsx: useEffect triggers on URL param changes
+- Fixed Hotel.jsx: Corrected LiteAPI field mappings
+  - hotelImages (not images)
+  - hotelFacilities (not facilities)  
+  - hotelDescription (not description)
+  - address as string (not object)
 
-## [Initial Deployment] – Apr 26, 2026
+## Deployment
+- Live: https://kristal-app-11801bdd.base44.app
+- GitHub: https://github.com/jeare2000-26/racku-voyage
+- Framework: Base44 mini-app (React)
+- API: LiteAPI v3.0 with 15% margin
 
-### Features
-- Landing page with destination cards
-- Search results with hotel grid, sorting, star filters
-- Dark luxury aesthetic (gold on black)
-- LiteAPI integration for places → hotels → rates pipeline
-- 15% margin hardcoded and applied to all searches
-- Commission tracking on hotel cards
-
----
-
-**Deployed:** https://kristal-app-11801bdd.base44.app
-**Last updated by:** Kristal (AI agent)
+Last updated: April 28, 2026 @ 02:01 UTC
