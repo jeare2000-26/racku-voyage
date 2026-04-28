@@ -11,15 +11,12 @@ export default function Search() {
   const today = new Date().toISOString().split("T")[0];
   const tomorrow = new Date(Date.now() + 86400000).toISOString().split("T")[0];
 
-  // Always read form state from URL params
   const destination = searchParams.get("destination") || "";
-  const checkin = searchParams.get("checkin") || "";
-  const checkout = searchParams.get("checkout") || "";
+  const checkin = searchParams.get("checkin") || today;
+  const checkout = searchParams.get("checkout") || tomorrow;
   const adults = searchParams.get("adults") || "2";
 
-  // Local form state (mirrors URL, allows editing before submit)
   const [form, setForm] = useState({ destination, checkin, checkout, adults });
-
   const [hotels, setHotels] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -28,7 +25,11 @@ export default function Search() {
   const [starFilter, setStarFilter] = useState([]);
 
   const doSearch = useCallback(async (dest, cin, cout, adts) => {
-    if (!dest || !cin || !cout) return;
+    if (!dest) return;
+
+    // Default dates if missing
+    const ciDate = cin || today;
+    const coDate = cout || tomorrow;
 
     setLoading(true);
     setError("");
@@ -36,9 +37,9 @@ export default function Search() {
     setResolvedCity("");
 
     try {
-      // 1. Places lookup
+      // Step 1: Places lookup
       const pRes = await fetch(
-        `https://api.liteapi.travel/v3.0/data/places?textQuery=${encodeURIComponent(dest)}&type=locality`,
+        `https://api.liteapi.travel/v3.0/data/places?textQuery=${encodeURIComponent(dest)}&language=en`,
         { headers: { "X-API-Key": LITEAPI_KEY } }
       );
       const pJson = await pRes.json();
@@ -50,42 +51,55 @@ export default function Search() {
         return;
       }
 
-      // Pick best match — prefer non-US small towns when country is hinted
+      // Pick best match — prefer one that matches hinted country if given
       const destLower = dest.toLowerCase();
       let best = places[0];
-      for (const p of places) {
-        const addr = (p.formattedAddress || "").toLowerCase();
-        const hint = destLower.includes(",") ? destLower.split(",").pop().trim() : "";
-        if (hint && addr.includes(hint)) { best = p; break; }
+      if (destLower.includes(",")) {
+        const hint = destLower.split(",").pop().trim();
+        const match = places.find(p => (p.formattedAddress || "").toLowerCase().includes(hint));
+        if (match) best = match;
       }
 
-      setResolvedCity(best.formattedAddress || best.displayName);
+      const resolvedName = best.formattedAddress || best.displayName || dest;
+      setResolvedCity(resolvedName);
 
-      // 2. Hotels by placeId
+      // Step 2: Hotels by placeId
       const hRes = await fetch(
         `https://api.liteapi.travel/v3.0/data/hotels?placeId=${encodeURIComponent(best.placeId)}&limit=20&language=en`,
         { headers: { "X-API-Key": LITEAPI_KEY } }
       );
       const hJson = await hRes.json();
-      const hotelList = hJson.data || [];
+      let hotelList = hJson.data || [];
+
+      // Fallback: try countryCode + cityName if placeId returned nothing
+      if (hotelList.length === 0 && (best.countryCode || best.country_code)) {
+        const cc = best.countryCode || best.country_code;
+        const cityName = best.displayName || dest.split(",")[0].trim();
+        const fbRes = await fetch(
+          `https://api.liteapi.travel/v3.0/data/hotels?countryCode=${cc}&cityName=${encodeURIComponent(cityName)}&limit=20&language=en`,
+          { headers: { "X-API-Key": LITEAPI_KEY } }
+        );
+        const fbJson = await fbRes.json();
+        hotelList = fbJson.data || [];
+      }
 
       if (hotelList.length === 0) {
-        setError(`No hotels found in ${best.formattedAddress}. Try a nearby city.`);
+        setError(`No hotels found in ${resolvedName}. Try a nearby major city.`);
         setLoading(false);
         return;
       }
 
-      const hotelIds = hotelList.slice(0, 15).map(h => h.id);
+      const hotelIds = hotelList.slice(0, 20).map(h => h.id).filter(Boolean);
 
-      // 3. Rates with 15% margin
+      // Step 3: Rates
       const rRes = await fetch("https://api.liteapi.travel/v3.0/hotels/rates", {
         method: "POST",
         headers: { "X-API-Key": LITEAPI_KEY, "Content-Type": "application/json" },
         body: JSON.stringify({
           hotelIds,
-          checkin: cin,
-          checkout: cout,
-          occupancies: [{ adults: parseInt(adts) }],
+          checkin: ciDate,
+          checkout: coDate,
+          occupancies: [{ adults: parseInt(adts) || 2 }],
           currency: "USD",
           guestNationality: "US",
           margin: DEFAULT_MARGIN,
@@ -95,18 +109,22 @@ export default function Search() {
       const ratesMap = {};
       for (const r of rJson.data || []) ratesMap[r.hotelId] = r;
 
-      // 4. Merge
-      const merged = hotelList.slice(0, 15).map(hotel => {
+      // Step 4: Merge
+      const merged = hotelList.slice(0, 20).map(hotel => {
         const rateInfo = ratesMap[hotel.id];
         const room = rateInfo?.roomTypes?.[0];
         const rate = room?.rates?.[0];
         const price = rate?.retailRate?.total?.[0]?.amount || 0;
-        return { ...hotel, rate, price, hasRates: price > 0, roomName: room?.name || "" };
+        const commission = price > 0 ? Math.round(price * DEFAULT_MARGIN / 100) : 0;
+        return { ...hotel, rate, price, commission, hasRates: price > 0, roomName: room?.name || "" };
       });
 
-      // Hotels with rates first
       merged.sort((a, b) => (b.hasRates ? 1 : 0) - (a.hasRates ? 1 : 0));
       setHotels(merged);
+
+      if (merged.filter(h => h.hasRates).length === 0) {
+        setError("Hotels found but no availability for these dates. Try different dates.");
+      }
 
     } catch (err) {
       setError(`Search error: ${err.message}`);
@@ -117,7 +135,7 @@ export default function Search() {
 
   // Trigger search whenever URL params change
   useEffect(() => {
-    if (destination && checkin && checkout) {
+    if (destination) {
       setForm({ destination, checkin, checkout, adults });
       doSearch(destination, checkin, checkout, adults);
     }
@@ -125,11 +143,13 @@ export default function Search() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!form.destination) { setError("Please enter a destination."); return; }
-    if (!form.checkin) { setError("Please select a check-in date."); return; }
-    if (!form.checkout) { setError("Please select a check-out date."); return; }
-    // Update URL — this triggers useEffect above
-    setSearchParams({ destination: form.destination, checkin: form.checkin, checkout: form.checkout, adults: form.adults });
+    if (!form.destination.trim()) { setError("Please enter a destination."); return; }
+    setSearchParams({
+      destination: form.destination,
+      checkin: form.checkin || today,
+      checkout: form.checkout || tomorrow,
+      adults: form.adults,
+    });
   };
 
   const nights = checkin && checkout
@@ -137,20 +157,22 @@ export default function Search() {
     : 1;
 
   const sorted = [...hotels].sort((a, b) => {
-    if (sortBy === "price_low") return (a.price || 9999) - (b.price || 9999);
+    if (sortBy === "price_low") return (a.price || 99999) - (b.price || 99999);
     if (sortBy === "price_high") return (b.price || 0) - (a.price || 0);
     if (sortBy === "rating") return (b.stars || 0) - (a.stars || 0);
-    return 0;
+    return (b.hasRates ? 1 : 0) - (a.hasRates ? 1 : 0);
   });
 
   const displayed = starFilter.length > 0
-    ? sorted.filter(h => starFilter.includes(h.stars || 0))
+    ? sorted.filter(h => starFilter.includes(Math.round(h.stars || 0)))
     : sorted;
+
+  const toggleStar = (s) => setStarFilter(prev => prev.includes(s) ? prev.filter(x => x !== s) : [...prev, s]);
 
   return (
     <div style={{ fontFamily: "'Georgia', serif", backgroundColor: "#0a0a0a", color: "#f0ead6", minHeight: "100vh" }}>
 
-      {/* NAV */}
+      {/* NAV / SEARCH BAR */}
       <nav style={{
         display: "flex", justifyContent: "space-between", alignItems: "center",
         padding: "14px 36px", borderBottom: "1px solid rgba(201,168,76,0.15)",
@@ -163,7 +185,7 @@ export default function Search() {
         </div>
 
         <form onSubmit={handleSubmit} style={{
-          display: "flex", gap: "12px", alignItems: "center", flexWrap: "wrap",
+          display: "flex", gap: "10px", alignItems: "center", flexWrap: "wrap",
           background: "rgba(255,255,255,0.03)", padding: "10px 18px",
           border: "1px solid rgba(201,168,76,0.2)",
         }}>
@@ -172,7 +194,7 @@ export default function Search() {
             placeholder="City, Country..."
             value={form.destination}
             onChange={e => setForm(f => ({ ...f, destination: e.target.value }))}
-            style={{ background: "transparent", border: "none", borderBottom: "1px solid rgba(201,168,76,0.3)", color: "#f0ead6", fontSize: "13px", padding: "5px 0", outline: "none", width: "190px" }}
+            style={{ background: "transparent", border: "none", borderBottom: "1px solid rgba(201,168,76,0.3)", color: "#f0ead6", fontSize: "13px", padding: "5px 0", outline: "none", width: "180px", fontFamily: "Georgia, serif" }}
           />
           <input type="date" value={form.checkin} min={today}
             onChange={e => setForm(f => ({ ...f, checkin: e.target.value }))}
@@ -183,7 +205,7 @@ export default function Search() {
             style={{ background: "transparent", border: "none", borderBottom: "1px solid rgba(201,168,76,0.3)", color: "#f0ead6", fontSize: "13px", padding: "5px 0", outline: "none", colorScheme: "dark" }}
           />
           <select value={form.adults} onChange={e => setForm(f => ({ ...f, adults: e.target.value }))}
-            style={{ background: "#1a1a1a", border: "none", borderBottom: "1px solid rgba(201,168,76,0.3)", color: "#f0ead6", fontSize: "13px", padding: "5px 0", outline: "none" }}>
+            style={{ background: "#1a1a1a", border: "none", borderBottom: "1px solid rgba(201,168,76,0.3)", color: "#f0ead6", fontSize: "13px", padding: "5px 0", outline: "none", cursor: "pointer" }}>
             {[1,2,3,4,5,6].map(n => <option key={n} value={n} style={{ background: "#1a1a1a" }}>{n} Guest{n>1?"s":""}</option>)}
           </select>
           <button type="submit" style={{
@@ -191,14 +213,16 @@ export default function Search() {
             padding: "8px 18px", fontSize: "11px", letterSpacing: "2px", cursor: "pointer", fontWeight: "700",
           }}>SEARCH</button>
         </form>
+
+        <button onClick={() => navigate("/dashboard")} style={{ background: "transparent", border: "1px solid rgba(201,168,76,0.25)", color: "#c9a84c", padding: "8px 16px", fontSize: "11px", letterSpacing: "2px", cursor: "pointer" }}>DASHBOARD</button>
       </nav>
 
       <div style={{ display: "flex" }}>
 
         {/* SIDEBAR */}
         <div style={{
-          width: "210px", minWidth: "210px", padding: "24px 18px",
-          borderRight: "1px solid rgba(201,168,76,0.1)", background: "rgba(255,255,255,0.01)",
+          width: "200px", minWidth: "200px", padding: "24px 18px",
+          borderRight: "1px solid rgba(201,168,76,0.1)",
           position: "sticky", top: "57px", height: "calc(100vh - 57px)", overflowY: "auto",
         }}>
           <div style={{ fontSize: "10px", letterSpacing: "4px", color: "#c9a84c", marginBottom: "20px" }}>REFINE</div>
@@ -221,18 +245,18 @@ export default function Search() {
 
           <div style={{ marginBottom: "22px" }}>
             <div style={{ fontSize: "10px", letterSpacing: "2px", color: "#d4c5a0", marginBottom: "10px" }}>STARS</div>
-            {[5,4,3,2].map(star => (
-              <div key={star} onClick={() => setStarFilter(p => p.includes(star) ? p.filter(s => s!==star) : [...p,star])}
+            {[5,4,3,2].map(s => (
+              <div key={s} onClick={() => toggleStar(s)}
                 style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "9px", cursor: "pointer" }}>
-                <div style={{ width: "11px", height: "11px", border: "1px solid rgba(201,168,76,0.4)", background: starFilter.includes(star) ? "#c9a84c" : "transparent" }} />
-                <span style={{ fontSize: "11px", color: starFilter.includes(star) ? "#c9a84c" : "#7a6e5a" }}>{"★".repeat(star)}</span>
+                <div style={{ width: "11px", height: "11px", border: "1px solid #c9a84c", background: starFilter.includes(s) ? "#c9a84c" : "transparent", flexShrink: 0 }} />
+                <span style={{ fontSize: "12px", color: starFilter.includes(s) ? "#c9a84c" : "#7a6e5a" }}>{"★".repeat(s)}</span>
               </div>
             ))}
           </div>
 
-          <div style={{ padding: "12px", background: "rgba(74,144,96,0.06)", border: "1px solid rgba(74,144,96,0.2)" }}>
-            <div style={{ fontSize: "10px", color: "#4a9060", letterSpacing: "2px", marginBottom: "4px" }}>MARGIN</div>
-            <div style={{ fontSize: "24px", color: "#4a9060", fontWeight: "300" }}>{DEFAULT_MARGIN}%</div>
+          <div style={{ padding: "14px", border: "1px solid rgba(74,144,96,0.3)", background: "rgba(74,144,96,0.04)", marginTop: "24px" }}>
+            <div style={{ fontSize: "9px", letterSpacing: "3px", color: "#4a9060", marginBottom: "4px" }}>MARGIN</div>
+            <div style={{ fontSize: "28px", color: "#4a9060", fontWeight: 300 }}>{DEFAULT_MARGIN}%</div>
             <div style={{ fontSize: "9px", color: "#3a6040", letterSpacing: "1px" }}>PER BOOKING</div>
           </div>
         </div>
@@ -240,109 +264,105 @@ export default function Search() {
         {/* RESULTS */}
         <div style={{ flex: 1, padding: "28px 36px" }}>
 
-          {/* Header */}
-          {!loading && resolvedCity && (
-            <div style={{ marginBottom: "22px" }}>
-              <h1 style={{ fontSize: "24px", fontWeight: "300", margin: "0 0 4px" }}>
-                Hotels in <span style={{ color: "#c9a84c", fontStyle: "italic" }}>{resolvedCity}</span>
-              </h1>
-              <div style={{ fontSize: "11px", color: "#7a6e5a", letterSpacing: "2px" }}>
-                {displayed.length} PROPERTIES · {nights} NIGHT{nights !== 1 ? "S" : ""} · {adults} GUEST{parseInt(adults) > 1 ? "S" : ""}
-              </div>
-            </div>
-          )}
-
-          {/* Empty state */}
-          {!destination && !loading && (
-            <div style={{ textAlign: "center", padding: "100px 20px" }}>
-              <div style={{ fontSize: "44px", color: "#c9a84c", marginBottom: "14px" }}>✦</div>
-              <div style={{ fontSize: "18px", fontWeight: "300", color: "#c9a84c", marginBottom: "10px" }}>Where Would You Like to Go?</div>
-              <div style={{ fontSize: "12px", color: "#5a5040" }}>Enter a city above — e.g. "Manila, Philippines" or "Tokyo, Japan"</div>
-            </div>
-          )}
-
           {/* Loading */}
           {loading && (
-            <div style={{ textAlign: "center", padding: "100px 20px" }}>
-              <div style={{ fontSize: "32px", color: "#c9a84c", marginBottom: "16px" }}>✦</div>
-              <div style={{ fontSize: "13px", color: "#7a6e5a", letterSpacing: "4px" }}>SEARCHING {destination.toUpperCase()}...</div>
-              <div style={{ fontSize: "10px", color: "#5a5040", marginTop: "8px", letterSpacing: "2px" }}>Applying {DEFAULT_MARGIN}% margin to all rates</div>
+            <div style={{ textAlign: "center", padding: "80px 0" }}>
+              <div style={{ fontSize: "32px", color: "#c9a84c", marginBottom: "16px", animation: "pulse 1.5s infinite" }}>✦</div>
+              <div style={{ fontSize: "12px", color: "#7a6e5a", letterSpacing: "4px" }}>SEARCHING HOTELS...</div>
+              {destination && <div style={{ fontSize: "11px", color: "#5a5040", marginTop: "8px" }}>{destination}</div>}
             </div>
           )}
 
           {/* Error */}
-          {error && !loading && (
-            <div style={{ padding: "16px 20px", border: "1px solid rgba(255,120,120,0.3)", background: "rgba(255,100,100,0.05)", color: "#ff9090", fontSize: "13px", marginBottom: "16px" }}>
-              ⚠ {error}
+          {!loading && error && (
+            <div style={{ textAlign: "center", padding: "60px 0" }}>
+              <div style={{ fontSize: "13px", color: "#ff9090", marginBottom: "20px", letterSpacing: "1px" }}>⚠ {error}</div>
+              <button onClick={() => navigate("/")} style={{ background: "#c9a84c", color: "#0a0a0a", border: "none", padding: "10px 24px", cursor: "pointer", fontSize: "11px", letterSpacing: "2px", fontWeight: "700" }}>← NEW SEARCH</button>
             </div>
           )}
 
-          {/* Hotel cards */}
-          {!loading && (
-            <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-              {displayed.map((hotel, idx) => {
-                const price = hotel.price || 0;
-                const commission = Math.round(price * DEFAULT_MARGIN / 100);
-                const stars = Math.min(Math.round(hotel.stars || hotel.starRating || 3), 5);
-                return (
-                  <div key={hotel.id || idx}
-                    onClick={() => navigate(`/hotel/${hotel.id}?checkin=${checkin}&checkout=${checkout}&adults=${adults}&hotelName=${encodeURIComponent(hotel.name)}`)}
-                    style={{
+          {/* No destination yet */}
+          {!loading && !error && !destination && (
+            <div style={{ textAlign: "center", padding: "80px 0", color: "#5a5040" }}>
+              <div style={{ fontSize: "40px", marginBottom: "16px" }}>✦</div>
+              <div style={{ fontSize: "13px", letterSpacing: "3px" }}>ENTER A DESTINATION TO BEGIN</div>
+            </div>
+          )}
+
+          {/* Results */}
+          {!loading && displayed.length > 0 && (
+            <>
+              <div style={{ marginBottom: "24px" }}>
+                <h2 style={{ fontSize: "24px", fontWeight: 300, margin: "0 0 4px" }}>
+                  Hotels in <span style={{ color: "#c9a84c" }}>{resolvedCity || destination}</span>
+                </h2>
+                <div style={{ fontSize: "11px", color: "#7a6e5a", letterSpacing: "2px" }}>
+                  {displayed.filter(h => h.hasRates).length} AVAILABLE · {nights} NIGHT{nights > 1 ? "S" : ""} · {adults} GUEST{parseInt(adults) > 1 ? "S" : ""}
+                </div>
+              </div>
+
+              <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+                {displayed.map(hotel => {
+                  const commission = hotel.price > 0 ? Math.round(hotel.price * DEFAULT_MARGIN / 100) : 0;
+                  return (
+                    <div key={hotel.id} style={{
                       display: "flex", border: "1px solid rgba(201,168,76,0.12)",
-                      cursor: "pointer", overflow: "hidden",
-                      background: "rgba(255,255,255,0.015)", transition: "all 0.2s",
+                      overflow: "hidden", transition: "border-color 0.2s",
+                      opacity: hotel.hasRates ? 1 : 0.5,
                     }}
-                    onMouseOver={e => { e.currentTarget.style.borderColor = "rgba(201,168,76,0.5)"; e.currentTarget.style.background = "rgba(201,168,76,0.04)"; }}
-                    onMouseOut={e => { e.currentTarget.style.borderColor = "rgba(201,168,76,0.12)"; e.currentTarget.style.background = "rgba(255,255,255,0.015)"; }}
-                  >
-                    <img
-                      src={hotel.thumbnail || hotel.main_photo || "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?w=400&q=70"}
-                      alt={hotel.name}
-                      onError={e => { e.target.src = "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?w=400&q=70"; }}
-                      style={{ width: "210px", minWidth: "210px", height: "160px", objectFit: "cover" }}
-                    />
-                    <div style={{ flex: 1, padding: "18px 22px", display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                      <div style={{ flex: 1, paddingRight: "12px" }}>
-                        <div style={{ fontSize: "11px", color: "#c9a84c", marginBottom: "4px" }}>{"★".repeat(stars)}</div>
-                        <h3 style={{ fontSize: "16px", fontWeight: "300", margin: "0 0 5px" }}>{hotel.name}</h3>
-                        <div style={{ fontSize: "11px", color: "#7a6e5a", marginBottom: "8px", letterSpacing: "1px" }}>
-                          {[hotel.city, hotel.country?.toUpperCase()].filter(Boolean).join(", ")}
-                        </div>
-                        {hotel.rating > 0 && (
-                          <span style={{ fontSize: "10px", color: "#4a9060", border: "1px solid rgba(74,144,96,0.3)", padding: "2px 7px" }}>
-                            {hotel.rating}/10 · {hotel.reviewCount?.toLocaleString()} reviews
-                          </span>
-                        )}
+                      onMouseEnter={e => e.currentTarget.style.borderColor = "rgba(201,168,76,0.4)"}
+                      onMouseLeave={e => e.currentTarget.style.borderColor = "rgba(201,168,76,0.12)"}
+                    >
+                      {/* PHOTO */}
+                      <div style={{ width: "200px", minWidth: "200px", overflow: "hidden" }}>
+                        <img
+                          src={hotel.thumbnail || hotel.main_photo || "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?w=400&q=80"}
+                          alt={hotel.name}
+                          onError={e => { e.target.src = "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?w=400&q=80"; }}
+                          style={{ width: "100%", height: "100%", objectFit: "cover", minHeight: "160px" }}
+                        />
                       </div>
-                      <div style={{ textAlign: "right", minWidth: "140px" }}>
-                        {hotel.hasRates ? (
-                          <>
-                            <div style={{ fontSize: "10px", color: "#7a6e5a", letterSpacing: "2px" }}>FROM</div>
-                            <div style={{ fontSize: "28px", color: "#c9a84c", fontWeight: "300", lineHeight: 1.1 }}>${Math.round(price)}</div>
-                            <div style={{ fontSize: "10px", color: "#5a5040", letterSpacing: "1px" }}>/NIGHT · USD</div>
-                            <div style={{ fontSize: "10px", color: "#4a9060", marginTop: "4px" }}>+${commission} commission</div>
-                          </>
-                        ) : (
-                          <div style={{ fontSize: "11px", color: "#5a5040", lineHeight: 1.6 }}>CHECK<br />AVAILABILITY</div>
-                        )}
-                        <button style={{
-                          marginTop: "10px", background: "#c9a84c", color: "#0a0a0a",
-                          border: "none", padding: "7px 14px", fontSize: "10px",
-                          letterSpacing: "2px", cursor: "pointer", fontWeight: "700", width: "100%",
-                        }}>VIEW HOTEL</button>
+
+                      {/* INFO */}
+                      <div style={{ flex: 1, padding: "20px 22px", display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                        <div>
+                          {hotel.stars > 0 && <div style={{ fontSize: "12px", color: "#c9a84c", marginBottom: "5px" }}>{"★".repeat(Math.min(Math.round(hotel.stars || 0), 5))}</div>}
+                          <h3 style={{ fontSize: "16px", fontWeight: 400, margin: "0 0 5px" }}>{hotel.name}</h3>
+                          <div style={{ fontSize: "11px", color: "#7a6e5a", marginBottom: "10px", letterSpacing: "1px" }}>
+                            {[hotel.city, hotel.country].filter(Boolean).join(", ")}
+                          </div>
+                          {hotel.rating > 0 && (
+                            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                              <span style={{ background: "#4a9060", color: "#fff", padding: "2px 8px", fontSize: "11px" }}>{hotel.rating}/10</span>
+                              {hotel.reviewCount > 0 && <span style={{ fontSize: "10px", color: "#5a5040" }}>{Number(hotel.reviewCount).toLocaleString()} reviews</span>}
+                            </div>
+                          )}
+                          {hotel.roomName && <div style={{ fontSize: "11px", color: "#5a5040", marginTop: "8px" }}>{hotel.roomName}</div>}
+                        </div>
+
+                        <div style={{ textAlign: "right", minWidth: "150px" }}>
+                          {hotel.hasRates ? (
+                            <>
+                              <div style={{ fontSize: "10px", color: "#5a5040", letterSpacing: "1px", marginBottom: "3px" }}>FROM</div>
+                              <div style={{ fontSize: "30px", color: "#c9a84c", fontWeight: 300, lineHeight: 1 }}>${Math.round(hotel.price)}</div>
+                              <div style={{ fontSize: "10px", color: "#5a5040", letterSpacing: "1px", marginBottom: "4px" }}>/NIGHT · USD</div>
+                              <div style={{ fontSize: "11px", color: "#4a9060", marginBottom: "14px" }}>+${commission} commission</div>
+                              <button
+                                onClick={() => navigate(`/hotel/${hotel.id}?checkin=${checkin}&checkout=${checkout}&adults=${adults}&hotelName=${encodeURIComponent(hotel.name)}`)}
+                                style={{ background: "#c9a84c", color: "#0a0a0a", border: "none", padding: "10px 20px", fontSize: "11px", letterSpacing: "2px", cursor: "pointer", fontWeight: 700 }}>
+                                VIEW HOTEL
+                              </button>
+                            </>
+                          ) : (
+                            <div style={{ fontSize: "11px", color: "#5a5040", letterSpacing: "1px", marginTop: "20px" }}>NO AVAILABILITY</div>
+                          )}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-
-          {!loading && hotels.length === 0 && destination && !error && (
-            <div style={{ textAlign: "center", padding: "60px", border: "1px solid rgba(201,168,76,0.08)" }}>
-              <div style={{ fontSize: "12px", color: "#5a5040", letterSpacing: "2px" }}>NO RESULTS FOUND</div>
-              <div style={{ fontSize: "11px", color: "#3a3028", marginTop: "8px" }}>Try different dates or another city</div>
-            </div>
+                  );
+                })}
+              </div>
+            </>
           )}
         </div>
       </div>
