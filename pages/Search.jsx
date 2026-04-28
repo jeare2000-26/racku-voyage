@@ -7,6 +7,86 @@ const DEFAULT_MARGIN = 15;
 const NAV_ITEMS = ["Rooms", "Gallery", "Conference Halls", "About", "Specials", "News", "Contact"];
 const RESTAURANT_ITEMS = ["Restaurant", "Lobby Bar", "Basement Bar", "Rooftop Bar"];
 
+// Isolated card component to prevent event bubbling issues
+function HotelCard({ hotel, checkin, checkout, adults, navigate }) {
+  const [hovered, setHovered] = useState(false);
+  const url = `/hotel/${hotel.id}?checkin=${checkin}&checkout=${checkout}&adults=${adults}&hotelName=${encodeURIComponent(hotel.name)}`;
+
+  return (
+    <div
+      style={{
+        display: "flex",
+        background: hovered ? "#FAFAF8" : "#F0EDE8",
+        opacity: hotel.hasRates ? 1 : 0.45,
+        transition: "background 0.2s",
+        borderBottom: "1px solid #EDEAE6",
+      }}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
+      {/* PHOTO */}
+      <div style={{ width: "200px", minWidth: "200px", height: "160px", overflow: "hidden", flexShrink: 0 }}>
+        <img
+          src={hotel.thumbnail || hotel.main_photo || "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?w=400&q=80"}
+          alt={hotel.name}
+          onError={e => { e.target.src = "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?w=400&q=80"; }}
+          style={{
+            width: "100%", height: "100%", objectFit: "cover", display: "block",
+            transform: hovered ? "scale(1.03)" : "scale(1)", transition: "transform 0.5s",
+          }}
+        />
+      </div>
+
+      {/* INFO */}
+      <div style={{ flex: 1, padding: "20px 24px", display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+        <div>
+          {hotel.stars > 0 && (
+            <div style={{ fontSize: "10px", color: "#867878", marginBottom: "5px", letterSpacing: "2px" }}>
+              {"★".repeat(Math.min(Math.round(hotel.stars || 0), 5))}
+            </div>
+          )}
+          <h3 style={{ fontSize: "16px", fontWeight: 400, margin: "0 0 4px", letterSpacing: "-0.2px" }}>{hotel.name}</h3>
+          <div style={{ fontSize: "11px", color: "#867878", marginBottom: "10px" }}>
+            {[hotel.city, hotel.country].filter(Boolean).join(", ")}
+          </div>
+          {hotel.rating > 0 && (
+            <div style={{ display: "inline-flex", alignItems: "center", gap: "8px" }}>
+              <span style={{ background: "#1E1612", color: "#F0EDE8", padding: "2px 8px", fontSize: "11px" }}>{hotel.rating}/10</span>
+              {hotel.reviewCount > 0 && <span style={{ fontSize: "10px", color: "#CBCBCB" }}>{Number(hotel.reviewCount).toLocaleString()} reviews</span>}
+            </div>
+          )}
+          {hotel.roomName && <div style={{ fontSize: "10px", color: "#CBCBCB", marginTop: "8px" }}>{hotel.roomName}</div>}
+        </div>
+
+        <div style={{ textAlign: "right", minWidth: "140px" }}>
+          {hotel.hasRates ? (
+            <>
+              <div style={{ fontSize: "9px", letterSpacing: "2px", color: "#CBCBCB", textTransform: "uppercase", marginBottom: "3px" }}>From</div>
+              <div style={{ fontSize: "28px", color: "#1E1612", fontWeight: 300, lineHeight: 1 }}>${Math.round(hotel.price)}</div>
+              <div style={{ fontSize: "9px", color: "#CBCBCB", letterSpacing: "1px", marginBottom: "4px", textTransform: "uppercase" }}>/Night · USD</div>
+              <div style={{ fontSize: "10px", color: "#4D2D1B", marginBottom: "14px" }}>+${hotel.commission} commission</div>
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); navigate(url); }}
+                style={{
+                  background: "#1E1612", color: "#F0EDE8", border: "none",
+                  padding: "9px 18px", fontSize: "10px", letterSpacing: "2px",
+                  cursor: "pointer", textTransform: "uppercase",
+                  position: "relative", zIndex: 10,
+                }}
+              >
+                View Hotel
+              </button>
+            </>
+          ) : (
+            <div style={{ fontSize: "10px", color: "#CBCBCB", letterSpacing: "1px", marginTop: "20px", textTransform: "uppercase" }}>No Availability</div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function Search() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -130,15 +210,15 @@ export default function Search() {
             onClick={() => navigate("/")}>RACKU VOYAGE</div>
           {NAV_ITEMS.map(item => (
             <div key={item} style={{ fontSize: "12px", color: "#46424A", marginBottom: "10px", cursor: "pointer", letterSpacing: "0.5px" }}
-              onMouseEnter={e => e.target.style.color = "#1E1612"}
-              onMouseLeave={e => e.target.style.color = "#46424A"}
+              onMouseEnter={e => e.currentTarget.style.color = "#1E1612"}
+              onMouseLeave={e => e.currentTarget.style.color = "#46424A"}
               onClick={() => navigate("/")}>{item}</div>
           ))}
           <div style={{ height: "1px", background: "#D8D3CC", margin: "18px 0" }} />
           {RESTAURANT_ITEMS.map(item => (
             <div key={item} style={{ fontSize: "11px", color: "#867878", marginBottom: "9px", cursor: "pointer" }}
-              onMouseEnter={e => e.target.style.color = "#4D2D1B"}
-              onMouseLeave={e => e.target.style.color = "#867878"}>{item}</div>
+              onMouseEnter={e => e.currentTarget.style.color = "#4D2D1B"}
+              onMouseLeave={e => e.currentTarget.style.color = "#867878"}>{item}</div>
           ))}
         </div>
         <button onClick={() => navigate("/dashboard")} style={{
@@ -254,71 +334,16 @@ export default function Search() {
                   </div>
                 </div>
 
-                <div style={{ display: "flex", flexDirection: "column", gap: "1px", background: "#D8D3CC" }}>
+                <div style={{ display: "flex", flexDirection: "column" }}>
                   {displayed.map(hotel => (
-                    <div key={hotel.id} style={{
-                      display: "flex", background: "#F0EDE8",
-                      opacity: hotel.hasRates ? 1 : 0.45,
-                      transition: "background 0.2s",
-                    }}
-                      onMouseEnter={e => e.currentTarget.style.background = "#FAFAF8"}
-                      onMouseLeave={e => e.currentTarget.style.background = "#F0EDE8"}
-                    >
-                      {/* PHOTO */}
-                      <div style={{ width: "200px", minWidth: "200px", height: "160px", overflow: "hidden", flexShrink: 0 }}>
-                        <img
-                          src={hotel.thumbnail || hotel.main_photo || "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?w=400&q=80"}
-                          alt={hotel.name}
-                          onError={e => { e.target.src = "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?w=400&q=80"; }}
-                          style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform 0.5s", display: "block" }}
-                          onMouseEnter={e => e.target.style.transform = "scale(1.03)"}
-                          onMouseLeave={e => e.target.style.transform = "scale(1)"}
-                        />
-                      </div>
-
-                      {/* INFO */}
-                      <div style={{ flex: 1, padding: "20px 24px", display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                        <div>
-                          {hotel.stars > 0 && (
-                            <div style={{ fontSize: "10px", color: "#867878", marginBottom: "5px", letterSpacing: "2px" }}>
-                              {"★".repeat(Math.min(Math.round(hotel.stars || 0), 5))}
-                            </div>
-                          )}
-                          <h3 style={{ fontSize: "16px", fontWeight: 400, margin: "0 0 4px", letterSpacing: "-0.2px" }}>{hotel.name}</h3>
-                          <div style={{ fontSize: "11px", color: "#867878", marginBottom: "10px" }}>
-                            {[hotel.city, hotel.country].filter(Boolean).join(", ")}
-                          </div>
-                          {hotel.rating > 0 && (
-                            <div style={{ display: "inline-flex", alignItems: "center", gap: "8px" }}>
-                              <span style={{ background: "#1E1612", color: "#F0EDE8", padding: "2px 8px", fontSize: "11px" }}>{hotel.rating}/10</span>
-                              {hotel.reviewCount > 0 && <span style={{ fontSize: "10px", color: "#CBCBCB" }}>{Number(hotel.reviewCount).toLocaleString()} reviews</span>}
-                            </div>
-                          )}
-                          {hotel.roomName && <div style={{ fontSize: "10px", color: "#CBCBCB", marginTop: "8px", letterSpacing: "0.5px" }}>{hotel.roomName}</div>}
-                        </div>
-
-                        <div style={{ textAlign: "right", minWidth: "140px" }}>
-                          {hotel.hasRates ? (
-                            <>
-                              <div style={{ fontSize: "9px", letterSpacing: "2px", color: "#CBCBCB", textTransform: "uppercase", marginBottom: "3px" }}>From</div>
-                              <div style={{ fontSize: "28px", color: "#1E1612", fontWeight: 300, lineHeight: 1 }}>${Math.round(hotel.price)}</div>
-                              <div style={{ fontSize: "9px", color: "#CBCBCB", letterSpacing: "1px", marginBottom: "4px", textTransform: "uppercase" }}>/Night · USD</div>
-                              <div style={{ fontSize: "10px", color: "#4D2D1B", marginBottom: "14px" }}>+${hotel.commission} commission</div>
-                              <button
-                                onClick={() => navigate(`/hotel/${hotel.id}?checkin=${checkin}&checkout=${checkout}&adults=${adults}&hotelName=${encodeURIComponent(hotel.name)}`)}
-                                style={{
-                                  background: "#1E1612", color: "#F0EDE8", border: "none",
-                                  padding: "9px 18px", fontSize: "10px", letterSpacing: "2px", cursor: "pointer", textTransform: "uppercase",
-                                }}>
-                                View Hotel
-                              </button>
-                            </>
-                          ) : (
-                            <div style={{ fontSize: "10px", color: "#CBCBCB", letterSpacing: "1px", marginTop: "20px", textTransform: "uppercase" }}>No Availability</div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
+                    <HotelCard
+                      key={hotel.id}
+                      hotel={hotel}
+                      checkin={checkin}
+                      checkout={checkout}
+                      adults={adults}
+                      navigate={navigate}
+                    />
                   ))}
                 </div>
               </>
