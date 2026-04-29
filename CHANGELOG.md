@@ -1,33 +1,52 @@
-# Changelog — April 28, 2026
+# Changelog
 
-## System Status
-- App is live and operational
-- All 5 pages deployed (Home, Search, Hotel, Book, Dashboard)
-- LiteAPI integration working with 15% margin
-- Booking entity fully schemaed with descriptions
+## [Current] — April 29, 2026
 
-## Entities
-- Booking: Full schema with field descriptions, enums, defaults
-  - Status enum: pending, confirmed, cancelled, completed
-  - Payout enum: pending, paid
-  - Currency defaults to USD
+### Fixed
+- **Search page field mapping** — Corrected API response field names (`placeId`, `hotelImages`, `hotelFacilities`)
+- **Hotel detail page** — Fixed API field references for hotel data display
+- **URL parameter handling** — Search now properly triggers on URL param changes, not just mount
+- **Form validation** — Added checks for missing dates before API calls
+- **Image fallbacks** — Added graceful error handling for missing hotel photos
 
-## Automations (Active)
-1. Auto-commit to GitHub — Runs daily at 09:00 UTC
-2. New Booking Alert — Triggers on new Booking records
+### Improved
+- **Search flow** — Form state separated from URL state for better UX
+- **Hotel page layout** — Sticky booking sidebar, improved photo gallery
+- **Rate display** — Commission calculations now visible on all rate displays
+- **Mobile responsiveness** — Better flex layouts for smaller screens
 
-## Recent Fixes
-- Fixed Search.jsx: useEffect triggers on URL param changes
-- Fixed Hotel.jsx: Corrected LiteAPI field mappings
-  - hotelImages (not images)
-  - hotelFacilities (not facilities)  
-  - hotelDescription (not description)
-  - address as string (not object)
+### Pages Status
+✓ Home — Landing & destination search  
+✓ Search — Results with live LiteAPI rates (FIXED)  
+✓ Hotel — Detail page with room selection (FIXED)  
+✓ Book — Booking form  
+✓ Dashboard — Commission tracking  
 
-## Deployment
-- Live: https://kristal-app-11801bdd.base44.app
-- GitHub: https://github.com/jeare2000-26/racku-voyage
-- Framework: Base44 mini-app (React)
-- API: LiteAPI v3.0 with 15% margin
+### API Integration
+- LiteAPI v3.0: `/data/places`, `/data/hotels`, `/data/hotel`, `/hotels/rates`
+- 15% margin applied automatically on all rates
+- USD currency, US guest nationality
 
-Last updated: April 28, 2026 @ 02:01 UTC
+### Commits Since Last Build
+- Hotel.jsx field mapping fixes
+- Search.jsx useEffect refactor for URL param handling
+- Improved error states and loading UI
+
+---
+
+## Architecture Notes
+
+The app follows this booking flow:
+1. Guest searches destination → places API resolves city
+2. Hotels list with live rates from `/hotels/rates` with 15% margin
+3. Click hotel → detailed view with room options
+4. Select room + guest info → booking confirmation
+5. Booking saved to Base44 Booking entity
+6. Ray views Dashboard for commission stats
+
+---
+
+**Maintained by:** Kristal (AI agent)  
+**Live:** https://kristal-app-11801bdd.base44.app  
+**Last updated:** 2026-04-29 02:01 UTC  
+
