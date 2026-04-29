@@ -8,31 +8,59 @@ const RESTAURANT_ITEMS = ["Restaurant", "Lobby Bar", "Basement Bar", "Rooftop Ba
 
 const T = {
   bg: "#0B0F1A", bgCard: "#111827", bgCardHover: "#161D2E", sidebar: "#0D1120",
-  border: "#1E2A3D", borderLight: "#253045", gold: "#C9A84C", goldLight: "#E0C06A",
-  goldMuted: "#8A6E32", text: "#F0EAD6", textMuted: "#8A99B8", textFaint: "#4A5568",
-  white: "#FFFFFF", success: "#2E7D32",
+  border: "#1E2A3D", gold: "#C9A84C", goldLight: "#E0C06A", goldMuted: "#8A6E32",
+  text: "#F0EAD6", textMuted: "#8A99B8", textFaint: "#4A5568", white: "#FFFFFF",
 };
 
+// Entire card is clickable
 function HotelCard({ hotel, checkin, checkout, adults, navigate }) {
   const [hovered, setHovered] = useState(false);
   const url = `/hotel?hotelId=${hotel.id}&checkin=${checkin}&checkout=${checkout}&adults=${adults}&hotelName=${encodeURIComponent(hotel.name)}`;
 
+  const canClick = hotel.hasRates;
+
   return (
-    <div style={{
-      display: "flex", background: hovered ? T.bgCardHover : T.bgCard,
-      opacity: hotel.hasRates ? 1 : 0.4, transition: "background 0.2s",
-      borderBottom: `1px solid ${T.border}`,
-    }}
+    <div
+      onClick={() => canClick && navigate(url)}
       onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}>
-      <div style={{ width: "200px", minWidth: "200px", height: "160px", overflow: "hidden", flexShrink: 0 }}>
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        display: "flex",
+        background: hovered && canClick ? T.bgCardHover : T.bgCard,
+        opacity: canClick ? 1 : 0.4,
+        transition: "all 0.25s",
+        borderBottom: `1px solid ${T.border}`,
+        borderLeft: `3px solid ${hovered && canClick ? T.gold : "transparent"}`,
+        cursor: canClick ? "pointer" : "default",
+      }}
+    >
+      {/* PHOTO */}
+      <div style={{ width: "220px", minWidth: "220px", height: "170px", overflow: "hidden", flexShrink: 0, position: "relative" }}>
         <img
           src={hotel.thumbnail || hotel.main_photo || "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?w=400&q=80"}
           alt={hotel.name}
           onError={e => { e.target.src = "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?w=400&q=80"; }}
-          style={{ width: "100%", height: "100%", objectFit: "cover", display: "block", transform: hovered ? "scale(1.04)" : "scale(1)", transition: "transform 0.5s", filter: "brightness(0.85)" }}
+          style={{
+            width: "100%", height: "100%", objectFit: "cover", display: "block",
+            transform: hovered && canClick ? "scale(1.06)" : "scale(1)",
+            transition: "transform 0.5s",
+            filter: hovered && canClick ? "brightness(0.95)" : "brightness(0.75)",
+          }}
         />
+        {/* Overlay arrow hint on hover */}
+        {hovered && canClick && (
+          <div style={{
+            position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center",
+            background: "rgba(11,15,26,0.35)",
+          }}>
+            <div style={{ fontSize: "11px", letterSpacing: "3px", color: T.gold, textTransform: "uppercase", background: "rgba(11,15,26,0.7)", padding: "8px 16px", border: `1px solid ${T.goldMuted}` }}>
+              View Hotel →
+            </div>
+          </div>
+        )}
       </div>
+
+      {/* INFO */}
       <div style={{ flex: 1, padding: "20px 24px", display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
         <div>
           {hotel.stars > 0 && (
@@ -40,7 +68,7 @@ function HotelCard({ hotel, checkin, checkout, adults, navigate }) {
               {"★".repeat(Math.min(Math.round(hotel.stars || 0), 5))}
             </div>
           )}
-          <h3 style={{ fontSize: "16px", fontWeight: 400, margin: "0 0 4px", letterSpacing: "-0.2px", color: T.text }}>{hotel.name}</h3>
+          <h3 style={{ fontSize: "17px", fontWeight: 400, margin: "0 0 4px", letterSpacing: "-0.2px", color: T.text }}>{hotel.name}</h3>
           <div style={{ fontSize: "11px", color: T.textMuted, marginBottom: "10px" }}>
             {[hotel.city, hotel.country].filter(Boolean).join(", ")}
           </div>
@@ -52,23 +80,14 @@ function HotelCard({ hotel, checkin, checkout, adults, navigate }) {
           )}
           {hotel.roomName && <div style={{ fontSize: "10px", color: T.textFaint, marginTop: "8px" }}>{hotel.roomName}</div>}
         </div>
-        <div style={{ textAlign: "right", minWidth: "140px" }}>
+
+        <div style={{ textAlign: "right", minWidth: "150px" }}>
           {hotel.hasRates ? (
             <>
               <div style={{ fontSize: "9px", letterSpacing: "2px", color: T.textFaint, textTransform: "uppercase", marginBottom: "3px" }}>From</div>
-              <div style={{ fontSize: "28px", color: T.text, fontWeight: 300, lineHeight: 1 }}>${Math.round(hotel.price)}</div>
-              <div style={{ fontSize: "9px", color: T.textFaint, letterSpacing: "1px", marginBottom: "4px", textTransform: "uppercase" }}>/Night · USD</div>
-              <div style={{ fontSize: "10px", color: T.gold, marginBottom: "14px" }}>+${hotel.commission} commission</div>
-              <button type="button" onClick={(e) => { e.stopPropagation(); navigate(url); }}
-                style={{
-                  background: T.gold, color: T.bg, border: "none",
-                  padding: "9px 18px", fontSize: "10px", letterSpacing: "2px",
-                  cursor: "pointer", textTransform: "uppercase", fontWeight: 600, transition: "all 0.2s",
-                }}
-                onMouseEnter={e => e.currentTarget.style.background = T.goldLight}
-                onMouseLeave={e => e.currentTarget.style.background = T.gold}>
-                View Hotel
-              </button>
+              <div style={{ fontSize: "30px", color: T.text, fontWeight: 300, lineHeight: 1 }}>${Math.round(hotel.price)}</div>
+              <div style={{ fontSize: "9px", color: T.textFaint, letterSpacing: "1px", marginBottom: "6px", textTransform: "uppercase" }}>/Night · USD</div>
+              <div style={{ fontSize: "11px", color: T.gold }}>+${hotel.commission} commission</div>
             </>
           ) : (
             <div style={{ fontSize: "10px", color: T.textFaint, letterSpacing: "1px", marginTop: "20px", textTransform: "uppercase" }}>No Availability</div>
@@ -276,8 +295,7 @@ export default function Search() {
             <div style={{ fontSize: "9px", letterSpacing: "3px", color: T.textFaint, textTransform: "uppercase", marginBottom: "12px" }}>Stars</div>
             {[5,4,3,2].map(s => (
               <label key={s} style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "10px", cursor: "pointer" }}>
-                <input type="checkbox" checked={starFilter.includes(s)} onChange={() => toggleStar(s)}
-                  style={{ accentColor: T.gold }} />
+                <input type="checkbox" checked={starFilter.includes(s)} onChange={() => toggleStar(s)} style={{ accentColor: T.gold }} />
                 <span style={{ fontSize: "11px", color: T.gold }}>{"★".repeat(s)}</span>
               </label>
             ))}
@@ -302,7 +320,7 @@ export default function Search() {
                     {resolvedCity.split(",")[0]}
                   </div>
                   <div style={{ fontSize: "12px", color: T.textMuted }}>
-                    {displayed.length} available · {nights} night{nights > 1 ? "s" : ""} · {adults} guest{parseInt(adults) > 1 ? "s" : ""}
+                    {displayed.length} available · {nights} night{nights > 1 ? "s" : ""} · {adults} guest{parseInt(adults) > 1 ? "s" : ""} · <span style={{ color: T.textFaint }}>Click any hotel to explore</span>
                   </div>
                 </div>
               ) : error ? (
