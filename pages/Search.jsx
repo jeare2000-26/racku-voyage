@@ -5,18 +5,18 @@ const LITEAPI_KEY = "prod_4924ac14-f585-4c07-98cf-51ea994bdcaf";
 const DEFAULT_MARGIN = 15;
 
 const T = {
-  bg: "#0E0B08",
-  sand: "#F5EDD6",
-  sandMuted: "#C8B89A",
-  sandFaint: "#7A6B55",
-  terracotta: "#C4622D",
-  terracottaLight: "#D97B4A",
-  terracottaDark: "#8C3F18",
-  teal: "#1B4B4B",
-  card: "#17120D",
-  cardHover: "#1F1812",
-  border: "#2E2318",
-  borderLight: "#3D3022",
+  bg: "#111109",
+  bgCard: "#191912",
+  olive: "#2A2A1E",
+  cream: "#F2EDE4",
+  creamMuted: "#BDB9B0",
+  creamFaint: "#6B6860",
+  creamGhost: "#2E2C28",
+  gold: "#C8A96E",
+  goldMuted: "#8A7248",
+  goldFaint: "#3D3220",
+  border: "#2A2820",
+  borderLight: "#3A3830",
 };
 
 function HotelCard({ hotel, checkin, checkout, adults, navigate }) {
@@ -29,10 +29,10 @@ function HotelCard({ hotel, checkin, checkout, adults, navigate }) {
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       style={{
-        display: "flex", background: hovered && canClick ? T.cardHover : T.card,
-        opacity: canClick ? 1 : 0.45, transition: "all 0.3s",
+        display: "flex", background: hovered && canClick ? T.bgCard : T.bg,
+        opacity: canClick ? 1 : 0.4, transition: "all 0.3s",
         borderBottom: `1px solid ${T.border}`,
-        borderLeft: `3px solid ${hovered && canClick ? T.terracotta : "transparent"}`,
+        borderLeft: `3px solid ${hovered && canClick ? T.gold : "transparent"}`,
         cursor: canClick ? "pointer" : "default",
       }}>
       {/* Photo */}
@@ -40,42 +40,42 @@ function HotelCard({ hotel, checkin, checkout, adults, navigate }) {
         <img src={hotel.thumbnail || "https://images.unsplash.com/photo-1539020140153-e479b8c22e70?w=400&q=80"}
           alt={hotel.name}
           onError={e => { e.target.src = "https://images.unsplash.com/photo-1539020140153-e479b8c22e70?w=400&q=80"; }}
-          style={{ width: "100%", height: "100%", objectFit: "cover", transform: hovered && canClick ? "scale(1.06)" : "scale(1)", transition: "transform 0.5s", filter: hovered && canClick ? "brightness(0.9)" : "brightness(0.75)" }}
+          style={{ width: "100%", height: "100%", objectFit: "cover", transform: hovered && canClick ? "scale(1.05)" : "scale(1)", transition: "transform 0.5s", filter: "brightness(0.75)" }}
         />
         {hovered && canClick && (
-          <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(14,11,8,0.4)" }}>
-            <div style={{ fontSize: "10px", letterSpacing: "3px", color: T.sand, textTransform: "uppercase", background: "rgba(196,98,45,0.85)", padding: "8px 18px" }}>View Details →</div>
+          <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(17,17,9,0.4)" }}>
+            <div style={{ fontFamily: "'Inter', sans-serif", fontSize: "9px", letterSpacing: "3px", color: T.cream, textTransform: "uppercase", background: "rgba(200,169,110,0.9)", padding: "7px 16px" }}>Explore →</div>
           </div>
         )}
       </div>
       {/* Info */}
-      <div style={{ flex: 1, padding: "22px 28px", display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+      <div style={{ flex: 1, padding: "24px 32px", display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
         <div>
           {hotel.stars > 0 && (
-            <div style={{ fontSize: "11px", color: T.terracotta, marginBottom: "6px", letterSpacing: "2px" }}>{"★".repeat(Math.min(Math.round(hotel.stars || 0), 5))}</div>
+            <div style={{ fontSize: "11px", color: T.gold, marginBottom: "6px", letterSpacing: "2px" }}>{"★".repeat(Math.min(Math.round(hotel.stars || 0), 5))}</div>
           )}
-          <h3 style={{ fontFamily: "'Georgia','Times New Roman',serif", fontSize: "18px", fontWeight: 400, margin: "0 0 4px", color: T.sand }}>{hotel.name}</h3>
-          <div style={{ fontSize: "11px", color: T.sandMuted, marginBottom: "12px" }}>
+          <h3 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: "20px", fontWeight: 400, margin: "0 0 5px", color: T.cream }}>{hotel.name}</h3>
+          <div style={{ fontFamily: "'Inter', sans-serif", fontSize: "11px", color: T.creamMuted, marginBottom: "14px" }}>
             {[hotel.city, hotel.country].filter(Boolean).join(", ")}
           </div>
           {hotel.rating > 0 && (
-            <div style={{ display: "inline-flex", alignItems: "center", gap: "8px" }}>
-              <span style={{ background: T.terracotta, color: T.sand, padding: "2px 10px", fontSize: "11px", fontWeight: 600 }}>{hotel.rating}/10</span>
-              {hotel.reviewCount > 0 && <span style={{ fontSize: "10px", color: T.sandFaint }}>{Number(hotel.reviewCount).toLocaleString()} reviews</span>}
+            <div style={{ display: "inline-flex", alignItems: "center", gap: "10px" }}>
+              <span style={{ background: T.gold, color: T.bg, padding: "2px 10px", fontFamily: "'Inter', sans-serif", fontSize: "11px", fontWeight: 500 }}>{hotel.rating}/10</span>
+              {hotel.reviewCount > 0 && <span style={{ fontFamily: "'Inter', sans-serif", fontSize: "10px", color: T.creamFaint }}>{Number(hotel.reviewCount).toLocaleString()} reviews</span>}
             </div>
           )}
-          {hotel.roomName && <div style={{ fontSize: "10px", color: T.sandFaint, marginTop: "8px" }}>{hotel.roomName}</div>}
+          {hotel.roomName && <div style={{ fontFamily: "'Inter', sans-serif", fontSize: "10px", color: T.creamFaint, marginTop: "8px" }}>{hotel.roomName}</div>}
         </div>
         <div style={{ textAlign: "right", minWidth: "160px" }}>
           {hotel.hasRates ? (
             <>
-              <div style={{ fontSize: "9px", letterSpacing: "2px", color: T.sandFaint, textTransform: "uppercase", marginBottom: "4px" }}>From</div>
-              <div style={{ fontFamily: "'Georgia','Times New Roman',serif", fontSize: "32px", color: T.sand, fontWeight: 300, lineHeight: 1 }}>${Math.round(hotel.price)}</div>
-              <div style={{ fontSize: "9px", color: T.sandFaint, letterSpacing: "1px", marginBottom: "8px", textTransform: "uppercase" }}>/Night · USD</div>
-              <div style={{ fontSize: "11px", color: T.terracottaLight }}>+${hotel.commission} commission</div>
+              <div style={{ fontFamily: "'Inter', sans-serif", fontSize: "9px", letterSpacing: "2px", color: T.creamFaint, textTransform: "uppercase", marginBottom: "4px" }}>From</div>
+              <div style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: "34px", color: T.cream, fontWeight: 400, lineHeight: 1 }}>${Math.round(hotel.price)}</div>
+              <div style={{ fontFamily: "'Inter', sans-serif", fontSize: "9px", color: T.creamFaint, letterSpacing: "1px", marginBottom: "8px", textTransform: "uppercase" }}>/Night · USD</div>
+              <div style={{ fontFamily: "'Inter', sans-serif", fontSize: "11px", color: T.gold }}>+${hotel.commission} commission</div>
             </>
           ) : (
-            <div style={{ fontSize: "10px", color: T.sandFaint, letterSpacing: "1px", marginTop: "24px", textTransform: "uppercase" }}>No Availability</div>
+            <div style={{ fontFamily: "'Inter', sans-serif", fontSize: "10px", color: T.creamFaint, letterSpacing: "1px", marginTop: "24px", textTransform: "uppercase" }}>No Availability</div>
           )}
         </div>
       </div>
@@ -169,140 +169,132 @@ export default function Search() {
   });
 
   return (
-    <div style={{ fontFamily: "'Georgia','Times New Roman',serif", background: T.bg, color: T.sand, minHeight: "100vh" }}>
+    <div style={{ fontFamily: "'Georgia','Times New Roman',serif", background: T.bg, color: T.cream, minHeight: "100vh" }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap');
-        * { box-sizing: border-box; }
-        input[type=date]::-webkit-calendar-picker-indicator { filter: invert(0.6); cursor: pointer; }
-        ::-webkit-scrollbar { width: 4px; } ::-webkit-scrollbar-track { background: ${T.bg}; } ::-webkit-scrollbar-thumb { background: ${T.border}; }
-        .sort-btn:hover { color: ${T.sand} !important; }
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Inter:wght@300;400;500&display=swap');
+        *, *::before, *::after { box-sizing: border-box; }
+        input[type=date]::-webkit-calendar-picker-indicator { filter: invert(0.5); cursor: pointer; }
+        input::placeholder { color: ${T.creamFaint}; font-family: 'Inter', sans-serif; }
+        ::-webkit-scrollbar { width: 3px; } ::-webkit-scrollbar-track { background: ${T.bg}; } ::-webkit-scrollbar-thumb { background: ${T.border}; }
+        @keyframes spin { to { transform: rotate(360deg); } }
       `}</style>
 
       {/* TOP NAV */}
-      <nav style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "18px 40px", borderBottom: `1px solid ${T.border}`, background: T.card, position: "sticky", top: 0, zIndex: 100 }}>
-        <div style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: "20px", fontWeight: 300, letterSpacing: "5px", color: T.sand, cursor: "pointer" }} onClick={() => navigate("/")}>
-          Racku<span style={{ color: T.terracotta }}>·</span>Voyage
+      <nav style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "20px 40px", borderBottom: `1px solid ${T.border}`, background: T.bgCard, position: "sticky", top: 0, zIndex: 100 }}>
+        <div style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: "18px", fontWeight: 400, letterSpacing: "5px", color: T.cream, cursor: "pointer" }} onClick={() => navigate("/")}>
+          Racku <em style={{ color: T.gold, fontStyle: "italic" }}>Voyage</em>
         </div>
-        <button onClick={() => navigate("/")} style={{ background: "transparent", border: `1px solid ${T.border}`, color: T.sandMuted, padding: "7px 20px", fontSize: "10px", letterSpacing: "2px", cursor: "pointer", textTransform: "uppercase", fontFamily: "inherit", transition: "all 0.2s" }}
-          onMouseEnter={e => { e.currentTarget.style.borderColor = T.terracotta; e.currentTarget.style.color = T.terracotta; }}
-          onMouseLeave={e => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.color = T.sandMuted; }}>
-          ← New Search
-        </button>
+        <div style={{ display: "flex", gap: "12px" }}>
+          <button onClick={() => navigate("/dashboard")} style={{ background: "transparent", border: `1px solid ${T.border}`, color: T.creamMuted, padding: "7px 20px", fontFamily: "'Inter', sans-serif", fontSize: "10px", letterSpacing: "2px", cursor: "pointer", textTransform: "uppercase", transition: "all 0.2s" }}
+            onMouseEnter={e => { e.currentTarget.style.borderColor = T.gold; e.currentTarget.style.color = T.gold; }}
+            onMouseLeave={e => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.color = T.creamMuted; }}>
+            Dashboard
+          </button>
+          <button onClick={() => navigate("/")} style={{ background: "transparent", border: `1px solid ${T.border}`, color: T.creamMuted, padding: "7px 20px", fontFamily: "'Inter', sans-serif", fontSize: "10px", letterSpacing: "2px", cursor: "pointer", textTransform: "uppercase", transition: "all 0.2s" }}
+            onMouseEnter={e => { e.currentTarget.style.borderColor = T.gold; e.currentTarget.style.color = T.gold; }}
+            onMouseLeave={e => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.color = T.creamMuted; }}>
+            ← Home
+          </button>
+        </div>
       </nav>
 
       {/* SEARCH BAR */}
-      <div style={{ background: T.card, padding: "28px 40px", borderBottom: `1px solid ${T.border}` }}>
+      <div style={{ background: T.bgCard, borderBottom: `1px solid ${T.border}` }}>
         <form onSubmit={handleSubmit}>
-          <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 0.7fr auto", gap: "0", border: `1px solid ${T.borderLight}`, background: T.bg, maxWidth: "1100px" }}>
-            <div style={{ padding: "16px 22px", borderRight: `1px solid ${T.border}` }}>
-              <div style={{ fontSize: "8px", letterSpacing: "3px", color: T.terracotta, textTransform: "uppercase", marginBottom: "5px" }}>Destination</div>
-              <input type="text" placeholder="City, country..." value={form.destination}
-                onChange={e => setForm(f => ({ ...f, destination: e.target.value }))}
-                style={{ width: "100%", background: "transparent", border: "none", color: T.sand, fontSize: "14px", outline: "none", fontFamily: "inherit", padding: 0 }}
-              />
-            </div>
-            <div style={{ padding: "16px 18px", borderRight: `1px solid ${T.border}` }}>
-              <div style={{ fontSize: "8px", letterSpacing: "3px", color: T.terracotta, textTransform: "uppercase", marginBottom: "5px" }}>Check In</div>
-              <input type="date" value={form.checkin} min={today}
-                onChange={e => setForm(f => ({ ...f, checkin: e.target.value }))}
-                style={{ width: "100%", background: "transparent", border: "none", color: T.sand, fontSize: "13px", outline: "none", fontFamily: "inherit", padding: 0, colorScheme: "dark" }}
-              />
-            </div>
-            <div style={{ padding: "16px 18px", borderRight: `1px solid ${T.border}` }}>
-              <div style={{ fontSize: "8px", letterSpacing: "3px", color: T.terracotta, textTransform: "uppercase", marginBottom: "5px" }}>Check Out</div>
-              <input type="date" value={form.checkout} min={form.checkin || tomorrow}
-                onChange={e => setForm(f => ({ ...f, checkout: e.target.value }))}
-                style={{ width: "100%", background: "transparent", border: "none", color: T.sand, fontSize: "13px", outline: "none", fontFamily: "inherit", padding: 0, colorScheme: "dark" }}
-              />
-            </div>
-            <div style={{ padding: "16px 14px", borderRight: `1px solid ${T.border}` }}>
-              <div style={{ fontSize: "8px", letterSpacing: "3px", color: T.terracotta, textTransform: "uppercase", marginBottom: "5px" }}>Guests</div>
+          <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 0.7fr auto", borderLeft: `1px solid ${T.border}` }}>
+            {[
+              { label: "Destination", type: "text", key: "destination", placeholder: "City or country..." },
+              { label: "Arrival", type: "date", key: "checkin" },
+              { label: "Departure", type: "date", key: "checkout" },
+            ].map(({ label, type, key, placeholder }) => (
+              <div key={key} style={{ padding: "18px 24px", borderRight: `1px solid ${T.border}` }}>
+                <div style={{ fontFamily: "'Inter', sans-serif", fontSize: "8px", letterSpacing: "3px", color: T.gold, textTransform: "uppercase", marginBottom: "5px" }}>{label}</div>
+                <input type={type} value={form[key]} placeholder={placeholder}
+                  min={key === "checkin" ? today : key === "checkout" ? form.checkin : undefined}
+                  onChange={e => setForm(f => ({ ...f, [key]: e.target.value }))}
+                  style={{ width: "100%", background: "transparent", border: "none", color: T.cream, fontFamily: "'Inter', sans-serif", fontSize: "14px", outline: "none", padding: 0, colorScheme: "dark" }}
+                />
+              </div>
+            ))}
+            <div style={{ padding: "18px 18px", borderRight: `1px solid ${T.border}` }}>
+              <div style={{ fontFamily: "'Inter', sans-serif", fontSize: "8px", letterSpacing: "3px", color: T.gold, textTransform: "uppercase", marginBottom: "5px" }}>Guests</div>
               <select value={form.adults} onChange={e => setForm(f => ({ ...f, adults: e.target.value }))}
-                style={{ background: "transparent", border: "none", color: T.sand, fontSize: "13px", outline: "none", fontFamily: "inherit", padding: 0, cursor: "pointer" }}>
-                {[1,2,3,4,5,6].map(n => <option key={n} value={n} style={{ background: T.card }}>{n} {n > 1 ? "Adults" : "Adult"}</option>)}
+                style={{ background: "transparent", border: "none", color: T.cream, fontFamily: "'Inter', sans-serif", fontSize: "14px", outline: "none", padding: 0, cursor: "pointer" }}>
+                {[1,2,3,4,5,6].map(n => <option key={n} value={n} style={{ background: T.bgCard }}>{n} {n > 1 ? "Adults" : "Adult"}</option>)}
               </select>
             </div>
-            <button type="submit" style={{ padding: "0 32px", background: T.terracotta, border: "none", color: T.sand, fontSize: "10px", letterSpacing: "2px", cursor: "pointer", textTransform: "uppercase", fontFamily: "inherit", fontWeight: 600, transition: "background 0.2s" }}
-              onMouseEnter={e => e.currentTarget.style.background = T.terracottaLight}
-              onMouseLeave={e => e.currentTarget.style.background = T.terracotta}>
+            <button type="submit" style={{ padding: "0 32px", background: T.gold, border: "none", color: T.bg, fontFamily: "'Inter', sans-serif", fontSize: "10px", letterSpacing: "3px", cursor: "pointer", textTransform: "uppercase", fontWeight: 500, transition: "all 0.2s" }}
+              onMouseEnter={e => e.currentTarget.style.background = "#D4B87A"}
+              onMouseLeave={e => e.currentTarget.style.background = T.gold}>
               Search
             </button>
           </div>
         </form>
       </div>
 
-      {/* RESULTS AREA */}
-      <div style={{ display: "flex", minHeight: "calc(100vh - 200px)" }}>
+      {/* RESULTS LAYOUT */}
+      <div style={{ display: "flex", minHeight: "calc(100vh - 140px)" }}>
 
-        {/* SIDEBAR FILTER */}
-        <aside style={{ width: "240px", minWidth: "240px", borderRight: `1px solid ${T.border}`, padding: "32px 24px", background: T.card }}>
-          <div style={{ fontSize: "9px", letterSpacing: "4px", color: T.terracotta, textTransform: "uppercase", marginBottom: "20px" }}>Sort & Filter</div>
+        {/* FILTER SIDEBAR */}
+        <aside style={{ width: "240px", minWidth: "240px", borderRight: `1px solid ${T.border}`, padding: "36px 28px", background: T.bgCard }}>
+          <div style={{ fontFamily: "'Inter', sans-serif", fontSize: "9px", letterSpacing: "4px", color: T.gold, textTransform: "uppercase", marginBottom: "28px" }}>Refine Results</div>
 
-          <div style={{ marginBottom: "28px" }}>
-            <div style={{ fontSize: "10px", letterSpacing: "2px", color: T.sandFaint, textTransform: "uppercase", marginBottom: "12px" }}>Sort By</div>
+          <div style={{ marginBottom: "32px" }}>
+            <div style={{ fontFamily: "'Inter', sans-serif", fontSize: "9px", letterSpacing: "2px", color: T.creamFaint, textTransform: "uppercase", marginBottom: "14px" }}>Sort By</div>
             {[["recommended","Recommended"],["price_low","Price: Low → High"],["price_high","Price: High → Low"],["rating","Star Rating"]].map(([val, label]) => (
-              <div key={val} onClick={() => setSortBy(val)} style={{ padding: "8px 0", fontSize: "12px", color: sortBy === val ? T.terracottaLight : T.sandMuted, borderLeft: `2px solid ${sortBy === val ? T.terracotta : "transparent"}`, paddingLeft: "12px", cursor: "pointer", transition: "all 0.2s", marginBottom: "2px" }}>
+              <div key={val} onClick={() => setSortBy(val)}
+                style={{ padding: "9px 0 9px 14px", fontFamily: "'Inter', sans-serif", fontSize: "12px", color: sortBy === val ? T.gold : T.creamMuted, borderLeft: `2px solid ${sortBy === val ? T.gold : "transparent"}`, cursor: "pointer", transition: "all 0.2s", marginBottom: "2px" }}>
                 {label}
               </div>
             ))}
           </div>
 
           {resolvedCity && (
-            <div style={{ padding: "14px", border: `1px solid ${T.border}`, background: T.bg }}>
-              <div style={{ fontSize: "8px", letterSpacing: "3px", color: T.sandFaint, textTransform: "uppercase", marginBottom: "5px" }}>Showing Results For</div>
-              <div style={{ fontSize: "12px", color: T.sand }}>{resolvedCity}</div>
+            <div style={{ padding: "16px", border: `1px solid ${T.border}`, background: T.bg, marginBottom: "20px" }}>
+              <div style={{ fontFamily: "'Inter', sans-serif", fontSize: "8px", letterSpacing: "3px", color: T.creamFaint, textTransform: "uppercase", marginBottom: "5px" }}>Showing</div>
+              <div style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: "14px", color: T.cream, fontStyle: "italic" }}>{resolvedCity}</div>
             </div>
           )}
 
           {hotels.length > 0 && (
-            <div style={{ marginTop: "24px", padding: "14px", border: `1px solid ${T.border}`, background: T.bg }}>
-              <div style={{ fontSize: "8px", letterSpacing: "3px", color: T.sandFaint, textTransform: "uppercase", marginBottom: "10px" }}>Availability</div>
-              <div style={{ fontSize: "22px", fontFamily: "'Georgia',serif", color: T.terracottaLight, fontWeight: 300 }}>{hotels.filter(h => h.hasRates).length}</div>
-              <div style={{ fontSize: "10px", color: T.sandFaint }}>of {hotels.length} hotels available</div>
+            <div style={{ padding: "16px", border: `1px solid ${T.border}`, background: T.bg }}>
+              <div style={{ fontFamily: "'Inter', sans-serif", fontSize: "8px", letterSpacing: "3px", color: T.creamFaint, textTransform: "uppercase", marginBottom: "8px" }}>Available</div>
+              <div style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: "28px", fontWeight: 300, color: T.gold }}>{hotels.filter(h => h.hasRates).length}</div>
+              <div style={{ fontFamily: "'Inter', sans-serif", fontSize: "10px", color: T.creamFaint }}>of {hotels.length} properties</div>
             </div>
           )}
-
-          <div style={{ marginTop: "24px" }}>
-            <button onClick={() => navigate("/dashboard")} style={{ width: "100%", background: "transparent", border: `1px solid ${T.border}`, color: T.sandMuted, padding: "10px", fontSize: "10px", letterSpacing: "2px", cursor: "pointer", textTransform: "uppercase", fontFamily: "inherit", transition: "all 0.2s" }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = T.terracotta; e.currentTarget.style.color = T.terracotta; }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.color = T.sandMuted; }}>
-              Dashboard
-            </button>
-          </div>
         </aside>
 
         {/* HOTEL LIST */}
-        <div style={{ flex: 1, padding: "0" }}>
-          {/* Header bar */}
+        <div style={{ flex: 1 }}>
+          {/* Result header */}
           {(hotels.length > 0 || loading) && (
-            <div style={{ padding: "18px 32px", borderBottom: `1px solid ${T.border}`, background: T.bg, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <div style={{ fontSize: "12px", color: T.sandMuted }}>
-                {loading ? "Searching..." : `${displayed.filter(h => h.hasRates).length} properties available · ${nights} night${nights > 1 ? "s" : ""}`}
+            <div style={{ padding: "20px 32px", borderBottom: `1px solid ${T.border}`, background: T.bg, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div style={{ fontFamily: "'Inter', sans-serif", fontSize: "12px", color: T.creamMuted, fontWeight: 300 }}>
+                {loading ? "Searching..." : `${displayed.filter(h => h.hasRates).length} properties · ${nights} night${nights > 1 ? "s" : ""} · Click any property to explore`}
               </div>
-              {destination && <div style={{ fontSize: "11px", color: T.sandFaint }}>{destination}</div>}
+              {destination && <div style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: "13px", fontStyle: "italic", color: T.creamFaint }}>{destination}</div>}
             </div>
           )}
 
           {loading && (
             <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "100px 0", gap: "20px" }}>
-              <div style={{ width: "40px", height: "40px", border: `2px solid ${T.border}`, borderTop: `2px solid ${T.terracotta}`, borderRadius: "50%", animation: "spin 1s linear infinite" }} />
-              <div style={{ fontSize: "10px", letterSpacing: "5px", color: T.sandFaint, textTransform: "uppercase" }}>Searching Hotels...</div>
-              <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+              <div style={{ width: "36px", height: "36px", border: `1.5px solid ${T.border}`, borderTop: `1.5px solid ${T.gold}`, borderRadius: "50%", animation: "spin 1s linear infinite" }} />
+              <div style={{ fontFamily: "'Inter', sans-serif", fontSize: "10px", letterSpacing: "5px", color: T.creamFaint, textTransform: "uppercase" }}>Searching...</div>
             </div>
           )}
 
           {!loading && error && (
             <div style={{ padding: "60px 32px", textAlign: "center" }}>
-              <div style={{ fontSize: "13px", color: "#E57373", marginBottom: "20px" }}>{error}</div>
-              <button onClick={() => navigate("/")} style={{ background: T.terracotta, color: T.sand, border: "none", padding: "10px 28px", cursor: "pointer", fontSize: "10px", letterSpacing: "3px", textTransform: "uppercase", fontFamily: "inherit" }}>New Search</button>
+              <div style={{ fontFamily: "'Inter', sans-serif", fontSize: "13px", color: "#E57373", marginBottom: "20px" }}>{error}</div>
+              <button onClick={() => navigate("/")} style={{ background: T.gold, color: T.bg, border: "none", padding: "10px 28px", cursor: "pointer", fontFamily: "'Inter', sans-serif", fontSize: "10px", letterSpacing: "3px", textTransform: "uppercase", fontWeight: 500 }}>New Search</button>
             </div>
           )}
 
           {!loading && !error && hotels.length === 0 && destination && (
             <div style={{ padding: "80px 32px", textAlign: "center" }}>
-              <div style={{ fontSize: "10px", letterSpacing: "4px", color: T.sandFaint, textTransform: "uppercase", marginBottom: "16px" }}>No Results</div>
-              <div style={{ fontFamily: "'Georgia',serif", fontSize: "28px", fontWeight: 300, color: T.sand, marginBottom: "12px" }}>No hotels found</div>
-              <div style={{ fontSize: "13px", color: T.sandMuted }}>Try a different destination or adjust your dates.</div>
+              <div style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: "32px", fontWeight: 300, fontStyle: "italic", color: T.cream, marginBottom: "12px" }}>No hotels found</div>
+              <div style={{ fontFamily: "'Inter', sans-serif", fontSize: "13px", color: T.creamFaint }}>Try a different destination or adjust your dates.</div>
             </div>
           )}
 
