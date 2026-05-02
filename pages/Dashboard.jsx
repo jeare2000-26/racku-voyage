@@ -2,20 +2,26 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Booking } from "@/api/entities";
 
-const NAV_ITEMS = ["Rooms", "Gallery", "Conference Halls", "About", "Specials", "News", "Contact"];
-const RESTAURANT_ITEMS = ["Restaurant", "Lobby Bar", "Basement Bar", "Rooftop Bar"];
-
 const T = {
-  bg: "#0B0F1A", bgCard: "#111827", bgCardHover: "#161D2E", sidebar: "#0D1120",
-  border: "#1E2A3D", gold: "#C9A84C", goldLight: "#E0C06A", goldMuted: "#8A6E32",
-  text: "#F0EAD6", textMuted: "#8A99B8", textFaint: "#4A5568", white: "#FFFFFF",
+  bg: "#0E0B08",
+  sand: "#F5EDD6",
+  sandMuted: "#C8B89A",
+  sandFaint: "#7A6B55",
+  terracotta: "#C4622D",
+  terracottaLight: "#D97B4A",
+  terracottaDark: "#8C3F18",
+  teal: "#1B4B4B",
+  card: "#17120D",
+  cardHover: "#1F1812",
+  border: "#2E2318",
+  borderLight: "#3D3022",
 };
 
 const statusColors = {
-  confirmed: { bg: "#0F2D1A", border: "#1A5C2A", text: "#4CAF50" },
-  pending:   { bg: "#1A1A0D", border: "#5C4A00", text: "#C9A84C" },
-  completed: { bg: "#0D1A2D", border: "#1A3A5C", text: "#4A9ECC" },
-  cancelled: { bg: "#1A0D0D", border: "#5C1A1A", text: "#E57373" },
+  confirmed: { bg: "rgba(27,75,75,0.3)", border: "#1B4B4B", text: "#6BBFBF" },
+  pending:   { bg: "rgba(196,98,45,0.15)", border: T.terracottaDark, text: T.terracottaLight },
+  completed: { bg: "rgba(245,237,214,0.08)", border: "#4A3A28", text: T.sandMuted },
+  cancelled: { bg: "rgba(229,115,115,0.12)", border: "#5C2020", text: "#E57373" },
 };
 
 export default function Dashboard() {
@@ -32,115 +38,139 @@ export default function Dashboard() {
   const totalCommission = bookings.reduce((s, b) => s + (b.commission_earned || 0), 0);
   const pendingPayout = bookings.filter(b => b.payout_status === "pending").reduce((s, b) => s + (b.commission_earned || 0), 0);
   const avgCommission = bookings.length > 0 ? totalCommission / bookings.length : 0;
+  const paidOut = totalCommission - pendingPayout;
 
   const filtered = filter === "all" ? bookings : bookings.filter(b => b.status === filter || b.payout_status === filter);
 
   return (
-    <div style={{ fontFamily: "'Georgia','Times New Roman',serif", background: T.bg, minHeight: "100vh", color: T.text, display: "flex" }}>
+    <div style={{ fontFamily: "'Georgia','Times New Roman',serif", background: T.bg, minHeight: "100vh", color: T.sand }}>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300&display=swap');
+        * { box-sizing: border-box; }
+        ::-webkit-scrollbar { width: 4px; } ::-webkit-scrollbar-track { background: ${T.bg}; } ::-webkit-scrollbar-thumb { background: ${T.border}; }
+        .table-row:hover { background: ${T.cardHover} !important; }
+        .tab-btn:hover { color: ${T.sand} !important; }
+      `}</style>
 
-      {/* SIDEBAR */}
-      <aside style={{
-        width: "180px", minWidth: "180px", padding: "28px 20px",
-        borderRight: `1px solid ${T.border}`, display: "flex", flexDirection: "column", justifyContent: "space-between",
-        position: "fixed", top: 0, left: 0, bottom: 0, zIndex: 50, background: T.sidebar, overflowY: "auto",
-      }}>
-        <div>
-          <div style={{ fontSize: "11px", letterSpacing: "3px", color: T.gold, textTransform: "uppercase", marginBottom: "36px", cursor: "pointer" }}
-            onClick={() => navigate("/")}>RACKU VOYAGE</div>
-          {NAV_ITEMS.map(item => (
-            <div key={item} style={{ fontSize: "12px", color: T.textMuted, marginBottom: "10px", cursor: "pointer", transition: "color 0.2s" }}
-              onMouseEnter={e => e.currentTarget.style.color = T.gold}
-              onMouseLeave={e => e.currentTarget.style.color = T.textMuted}
-              onClick={() => navigate("/")}>{item}</div>
-          ))}
-          <div style={{ height: "1px", background: T.border, margin: "18px 0" }} />
-          {RESTAURANT_ITEMS.map(item => (
-            <div key={item} style={{ fontSize: "11px", color: T.textFaint, marginBottom: "9px" }}>{item}</div>
-          ))}
+      {/* NAV */}
+      <nav style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "18px 48px", borderBottom: `1px solid ${T.border}`, background: T.card, position: "sticky", top: 0, zIndex: 100 }}>
+        <div style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: "20px", fontWeight: 300, letterSpacing: "5px", color: T.sand, cursor: "pointer" }} onClick={() => navigate("/")}>
+          Racku<span style={{ color: T.terracotta }}>·</span>Voyage
         </div>
-        <button onClick={() => navigate("/")} style={{
-          background: T.gold, color: T.bg, border: "none",
-          padding: "9px 12px", fontSize: "10px", letterSpacing: "2px", cursor: "pointer", textTransform: "uppercase", width: "100%", fontWeight: 600,
-        }}>+ New Search</button>
-      </aside>
+        <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+          <div style={{ fontSize: "9px", letterSpacing: "4px", color: T.terracotta, textTransform: "uppercase", border: `1px solid ${T.terracottaDark}`, padding: "5px 14px" }}>Commission Dashboard</div>
+          <button onClick={() => navigate("/")} style={{ background: T.terracotta, color: T.sand, border: "none", padding: "8px 22px", fontSize: "10px", letterSpacing: "2px", cursor: "pointer", textTransform: "uppercase", fontFamily: "inherit", fontWeight: 600, transition: "background 0.2s" }}
+            onMouseEnter={e => e.currentTarget.style.background = T.terracottaLight}
+            onMouseLeave={e => e.currentTarget.style.background = T.terracotta}>
+            + New Search
+          </button>
+        </div>
+      </nav>
 
-      {/* MAIN */}
-      <main style={{ marginLeft: "180px", flex: 1, padding: "48px" }}>
+      <div style={{ padding: "48px" }}>
 
-        <div style={{ marginBottom: "40px", borderBottom: `1px solid ${T.border}`, paddingBottom: "20px" }}>
-          <div style={{ fontSize: "9px", letterSpacing: "6px", color: T.goldMuted, textTransform: "uppercase", marginBottom: "10px" }}>Commission Dashboard</div>
-          <h1 style={{ fontSize: "36px", fontWeight: 300, margin: 0, letterSpacing: "-0.5px", color: T.text }}>Earnings Overview</h1>
+        {/* HEADER */}
+        <div style={{ marginBottom: "48px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "14px", marginBottom: "8px" }}>
+            <div style={{ width: "32px", height: "1px", background: T.terracotta }} />
+            <span style={{ fontSize: "9px", letterSpacing: "4px", color: T.terracotta, textTransform: "uppercase" }}>Racku Voyage</span>
+          </div>
+          <h1 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: "48px", fontWeight: 300, margin: 0, color: T.sand }}>
+            Earnings Overview
+          </h1>
         </div>
 
-        {/* STATS */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "2px", marginBottom: "48px" }}>
+        {/* STAT CARDS */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: "2px", marginBottom: "48px" }}>
           {[
-            { label: "Total Bookings", value: bookings.length, sub: "All time", highlight: false },
-            { label: "Total Revenue", value: `$${Math.round(totalRevenue).toLocaleString()}`, sub: "USD", highlight: false },
-            { label: "Total Commission", value: `$${Math.round(totalCommission).toLocaleString()}`, sub: "15% margin", highlight: true },
-            { label: "Pending Payout", value: `$${Math.round(pendingPayout).toLocaleString()}`, sub: "Awaiting", highlight: false },
+            { label: "Total Bookings", value: bookings.length, sub: "All time", accent: false },
+            { label: "Total Revenue", value: `$${Math.round(totalRevenue).toLocaleString()}`, sub: "USD Generated", accent: false },
+            { label: "Total Commission", value: `$${Math.round(totalCommission).toLocaleString()}`, sub: "15% Margin", accent: true },
+            { label: "Pending Payout", value: `$${Math.round(pendingPayout).toLocaleString()}`, sub: "Awaiting Payment", accent: false },
+            { label: "Paid Out", value: `$${Math.round(paidOut).toLocaleString()}`, sub: "Received", accent: false },
           ].map(stat => (
-            <div key={stat.label} style={{ padding: "28px 24px", background: T.bgCard, border: `1px solid ${stat.highlight ? T.goldMuted : T.border}` }}>
-              <div style={{ fontSize: "9px", letterSpacing: "3px", color: T.textFaint, textTransform: "uppercase", marginBottom: "10px" }}>{stat.label}</div>
-              <div style={{ fontSize: "30px", fontWeight: 300, color: stat.highlight ? T.gold : T.text, lineHeight: 1 }}>{stat.value}</div>
-              <div style={{ fontSize: "10px", color: T.textFaint, marginTop: "4px" }}>{stat.sub}</div>
+            <div key={stat.label} style={{ padding: "28px 24px", background: stat.accent ? `linear-gradient(135deg, ${T.terracottaDark}, #3A1206)` : T.card, border: `1px solid ${stat.accent ? T.terracottaDark : T.border}`, position: "relative", overflow: "hidden" }}>
+              {stat.accent && <div style={{ position: "absolute", top: 0, right: 0, width: "60px", height: "60px", background: "rgba(255,255,255,0.03)", borderRadius: "0 0 0 60px" }} />}
+              <div style={{ fontSize: "8px", letterSpacing: "3px", color: stat.accent ? T.sandMuted : T.sandFaint, textTransform: "uppercase", marginBottom: "12px" }}>{stat.label}</div>
+              <div style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: "32px", fontWeight: 300, color: stat.accent ? T.sand : T.sand, lineHeight: 1, marginBottom: "6px" }}>{stat.value}</div>
+              <div style={{ fontSize: "10px", color: stat.accent ? T.sandMuted : T.sandFaint }}>{stat.sub}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* MINI METRICS */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "2px", marginBottom: "40px" }}>
+          {[
+            { label: "Avg Commission / Booking", value: `$${Math.round(avgCommission)}` },
+            { label: "Commission Rate", value: "15%" },
+            { label: "Confirmed Bookings", value: bookings.filter(b => b.status === "confirmed").length },
+          ].map(stat => (
+            <div key={stat.label} style={{ padding: "18px 24px", background: T.card, border: `1px solid ${T.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div style={{ fontSize: "9px", letterSpacing: "2px", color: T.sandFaint, textTransform: "uppercase" }}>{stat.label}</div>
+              <div style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: "22px", fontWeight: 300, color: T.terracottaLight }}>{stat.value}</div>
             </div>
           ))}
         </div>
 
         {/* FILTER TABS */}
-        <div style={{ display: "flex", gap: "0", marginBottom: "24px", borderBottom: `1px solid ${T.border}` }}>
-          {[["all","All"],["confirmed","Confirmed"],["pending","Pending"],["completed","Completed"],["cancelled","Cancelled"]].map(([val, label]) => (
-            <button key={val} onClick={() => setFilter(val)} style={{
-              background: "transparent", color: filter === val ? T.gold : T.textFaint,
-              border: "none", borderBottom: filter === val ? `2px solid ${T.gold}` : "2px solid transparent",
-              padding: "10px 18px", fontSize: "11px", letterSpacing: "1px", cursor: "pointer",
-              textTransform: "uppercase", marginBottom: "-1px", transition: "all 0.2s",
+        <div style={{ display: "flex", gap: "0", marginBottom: "0", borderBottom: `1px solid ${T.border}` }}>
+          {[["all","All Bookings"],["confirmed","Confirmed"],["pending","Pending"],["completed","Completed"],["cancelled","Cancelled"]].map(([val, label]) => (
+            <button key={val} className="tab-btn" onClick={() => setFilter(val)} style={{
+              background: "transparent", color: filter === val ? T.terracottaLight : T.sandFaint,
+              border: "none", borderBottom: `2px solid ${filter === val ? T.terracotta : "transparent"}`,
+              padding: "12px 22px", fontSize: "10px", letterSpacing: "2px", cursor: "pointer",
+              textTransform: "uppercase", fontFamily: "inherit", marginBottom: "-1px", transition: "all 0.2s",
             }}>{label}</button>
           ))}
         </div>
 
         {/* TABLE */}
         {loading ? (
-          <div style={{ textAlign: "center", padding: "60px", fontSize: "11px", color: T.textFaint, letterSpacing: "4px", textTransform: "uppercase" }}>Loading...</div>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: "80px 0", flexDirection: "column", gap: "20px" }}>
+            <div style={{ width: "36px", height: "36px", border: `2px solid ${T.border}`, borderTop: `2px solid ${T.terracotta}`, borderRadius: "50%", animation: "spin 1s linear infinite" }} />
+            <div style={{ fontSize: "10px", color: T.sandFaint, letterSpacing: "4px", textTransform: "uppercase" }}>Loading...</div>
+            <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+          </div>
         ) : filtered.length === 0 ? (
-          <div style={{ textAlign: "center", padding: "60px", border: `1px solid ${T.border}`, background: T.bgCard }}>
-            <div style={{ fontSize: "12px", color: T.textFaint, letterSpacing: "3px", textTransform: "uppercase", marginBottom: "20px" }}>No Bookings Yet</div>
-            <button onClick={() => navigate("/")} style={{ background: T.gold, color: T.bg, border: "none", padding: "10px 24px", cursor: "pointer", fontSize: "10px", letterSpacing: "3px", textTransform: "uppercase", fontWeight: 600 }}>Start Searching</button>
+          <div style={{ textAlign: "center", padding: "80px", border: `1px solid ${T.border}`, background: T.card, marginTop: "0" }}>
+            <div style={{ fontSize: "9px", letterSpacing: "5px", color: T.sandFaint, textTransform: "uppercase", marginBottom: "16px" }}>No Bookings Yet</div>
+            <div style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: "28px", fontWeight: 300, color: T.sand, marginBottom: "28px" }}>Start exploring hotels</div>
+            <button onClick={() => navigate("/")} style={{ background: T.terracotta, color: T.sand, border: "none", padding: "14px 32px", cursor: "pointer", fontSize: "10px", letterSpacing: "3px", textTransform: "uppercase", fontFamily: "inherit", fontWeight: 600 }}>
+              Search Hotels
+            </button>
           </div>
         ) : (
-          <div style={{ border: `1px solid ${T.border}` }}>
-            <div style={{ display: "grid", gridTemplateColumns: "1.5fr 1fr 1fr 0.6fr 0.8fr 0.8fr 0.7fr", padding: "12px 20px", background: T.bgCard, borderBottom: `1px solid ${T.border}` }}>
-              {["Hotel","Guest","Dates","Nights","Total","Commission","Status"].map(h => (
-                <div key={h} style={{ fontSize: "9px", letterSpacing: "2px", color: T.textFaint, textTransform: "uppercase" }}>{h}</div>
+          <div style={{ border: `1px solid ${T.border}`, borderTop: "none" }}>
+            {/* Table header */}
+            <div style={{ display: "grid", gridTemplateColumns: "1.6fr 1fr 1fr 0.5fr 0.9fr 0.9fr 0.7fr", padding: "14px 24px", background: T.card, borderBottom: `1px solid ${T.border}` }}>
+              {["Hotel", "Guest", "Dates", "Nights", "Total", "Commission", "Status"].map(h => (
+                <div key={h} style={{ fontSize: "8px", letterSpacing: "3px", color: T.sandFaint, textTransform: "uppercase" }}>{h}</div>
               ))}
             </div>
+            {/* Rows */}
             {filtered.map((b, i) => (
-              <div key={b.id} style={{
-                display: "grid", gridTemplateColumns: "1.5fr 1fr 1fr 0.6fr 0.8fr 0.8fr 0.7fr",
-                padding: "15px 20px", borderBottom: i < filtered.length - 1 ? `1px solid ${T.border}` : "none",
-                alignItems: "center", transition: "background 0.15s", background: T.bg,
-              }}
-                onMouseEnter={e => e.currentTarget.style.background = T.bgCard}
-                onMouseLeave={e => e.currentTarget.style.background = T.bg}
-              >
+              <div key={b.id} className="table-row" style={{
+                display: "grid", gridTemplateColumns: "1.6fr 1fr 1fr 0.5fr 0.9fr 0.9fr 0.7fr",
+                padding: "16px 24px", borderBottom: i < filtered.length - 1 ? `1px solid ${T.border}` : "none",
+                alignItems: "center", background: T.bg, transition: "background 0.15s",
+              }}>
                 <div>
-                  <div style={{ fontSize: "13px", marginBottom: "2px", color: T.text }}>{b.hotel_name}</div>
-                  <div style={{ fontSize: "10px", color: T.textFaint }}>{b.room_name}</div>
+                  <div style={{ fontSize: "13px", color: T.sand, marginBottom: "2px" }}>{b.hotel_name}</div>
+                  <div style={{ fontSize: "10px", color: T.sandFaint }}>{b.room_name}</div>
                 </div>
                 <div>
-                  <div style={{ fontSize: "12px", color: T.text }}>{b.guest_first_name} {b.guest_last_name}</div>
-                  <div style={{ fontSize: "10px", color: T.textFaint }}>{b.guest_email}</div>
+                  <div style={{ fontSize: "12px", color: T.sandMuted }}>{b.guest_first_name} {b.guest_last_name}</div>
+                  <div style={{ fontSize: "10px", color: T.sandFaint }}>{b.guest_email}</div>
                 </div>
-                <div style={{ fontSize: "11px", color: T.textMuted }}>{b.checkin}<br />{b.checkout}</div>
-                <div style={{ fontSize: "13px", color: T.text }}>{b.nights}</div>
-                <div style={{ fontSize: "14px", color: T.text }}>${b.total_price}</div>
-                <div style={{ fontSize: "14px", color: T.gold }}>+${b.commission_earned}</div>
+                <div style={{ fontSize: "11px", color: T.sandMuted, lineHeight: 1.6 }}>{b.checkin}<br />{b.checkout}</div>
+                <div style={{ fontFamily: "'Georgia',serif", fontSize: "16px", color: T.sand, fontWeight: 300 }}>{b.nights}</div>
+                <div style={{ fontFamily: "'Georgia',serif", fontSize: "16px", color: T.sand, fontWeight: 300 }}>${b.total_price}</div>
+                <div style={{ fontFamily: "'Georgia',serif", fontSize: "16px", color: T.terracottaLight, fontWeight: 300 }}>+${b.commission_earned}</div>
                 <div>
                   {(() => {
                     const sc = statusColors[b.status] || statusColors.pending;
                     return (
-                      <span style={{ fontSize: "9px", letterSpacing: "1px", color: sc.text, background: sc.bg, border: `1px solid ${sc.border}`, padding: "3px 8px", textTransform: "uppercase" }}>
+                      <span style={{ fontSize: "8px", letterSpacing: "1.5px", color: sc.text, background: sc.bg, border: `1px solid ${sc.border}`, padding: "4px 10px", textTransform: "uppercase" }}>
                         {b.status || "pending"}
                       </span>
                     );
@@ -151,22 +181,16 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* SECONDARY STATS */}
-        {bookings.length > 0 && (
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "2px", marginTop: "24px" }}>
-            {[
-              { label: "Avg Commission / Booking", value: `$${Math.round(avgCommission)}` },
-              { label: "Margin Rate", value: "15%" },
-              { label: "Paid Out", value: `$${Math.round(totalCommission - pendingPayout).toLocaleString()}` },
-            ].map(stat => (
-              <div key={stat.label} style={{ padding: "20px 24px", background: T.bgCard, border: `1px solid ${T.border}` }}>
-                <div style={{ fontSize: "9px", letterSpacing: "2px", color: T.textFaint, textTransform: "uppercase", marginBottom: "6px" }}>{stat.label}</div>
-                <div style={{ fontSize: "22px", fontWeight: 300, color: T.text }}>{stat.value}</div>
-              </div>
-            ))}
+        {/* Footer */}
+        <div style={{ marginTop: "48px", paddingTop: "24px", borderTop: `1px solid ${T.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: "18px", fontWeight: 300, letterSpacing: "4px", color: T.sandFaint }}>
+            Racku<span style={{ color: T.terracottaDark }}>·</span>Voyage
           </div>
-        )}
-      </main>
+          <div style={{ fontSize: "10px", color: T.sandFaint, letterSpacing: "1px" }}>
+            {bookings.length} total bookings · 15% commission rate
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

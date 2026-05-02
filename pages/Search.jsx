@@ -3,94 +3,79 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 
 const LITEAPI_KEY = "prod_4924ac14-f585-4c07-98cf-51ea994bdcaf";
 const DEFAULT_MARGIN = 15;
-const NAV_ITEMS = ["Rooms", "Gallery", "Conference Halls", "About", "Specials", "News", "Contact"];
-const RESTAURANT_ITEMS = ["Restaurant", "Lobby Bar", "Basement Bar", "Rooftop Bar"];
 
 const T = {
-  bg: "#0B0F1A", bgCard: "#111827", bgCardHover: "#161D2E", sidebar: "#0D1120",
-  border: "#1E2A3D", gold: "#C9A84C", goldLight: "#E0C06A", goldMuted: "#8A6E32",
-  text: "#F0EAD6", textMuted: "#8A99B8", textFaint: "#4A5568", white: "#FFFFFF",
+  bg: "#0E0B08",
+  sand: "#F5EDD6",
+  sandMuted: "#C8B89A",
+  sandFaint: "#7A6B55",
+  terracotta: "#C4622D",
+  terracottaLight: "#D97B4A",
+  terracottaDark: "#8C3F18",
+  teal: "#1B4B4B",
+  card: "#17120D",
+  cardHover: "#1F1812",
+  border: "#2E2318",
+  borderLight: "#3D3022",
 };
 
-// Entire card is clickable
 function HotelCard({ hotel, checkin, checkout, adults, navigate }) {
   const [hovered, setHovered] = useState(false);
   const url = `/hotel?hotelId=${hotel.id}&checkin=${checkin}&checkout=${checkout}&adults=${adults}&hotelName=${encodeURIComponent(hotel.name)}`;
-
   const canClick = hotel.hasRates;
 
   return (
-    <div
-      onClick={() => canClick && navigate(url)}
+    <div onClick={() => canClick && navigate(url)}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       style={{
-        display: "flex",
-        background: hovered && canClick ? T.bgCardHover : T.bgCard,
-        opacity: canClick ? 1 : 0.4,
-        transition: "all 0.25s",
+        display: "flex", background: hovered && canClick ? T.cardHover : T.card,
+        opacity: canClick ? 1 : 0.45, transition: "all 0.3s",
         borderBottom: `1px solid ${T.border}`,
-        borderLeft: `3px solid ${hovered && canClick ? T.gold : "transparent"}`,
+        borderLeft: `3px solid ${hovered && canClick ? T.terracotta : "transparent"}`,
         cursor: canClick ? "pointer" : "default",
-      }}
-    >
-      {/* PHOTO */}
-      <div style={{ width: "220px", minWidth: "220px", height: "170px", overflow: "hidden", flexShrink: 0, position: "relative" }}>
-        <img
-          src={hotel.thumbnail || hotel.main_photo || "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?w=400&q=80"}
+      }}>
+      {/* Photo */}
+      <div style={{ width: "240px", minWidth: "240px", height: "180px", overflow: "hidden", flexShrink: 0, position: "relative" }}>
+        <img src={hotel.thumbnail || "https://images.unsplash.com/photo-1539020140153-e479b8c22e70?w=400&q=80"}
           alt={hotel.name}
-          onError={e => { e.target.src = "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?w=400&q=80"; }}
-          style={{
-            width: "100%", height: "100%", objectFit: "cover", display: "block",
-            transform: hovered && canClick ? "scale(1.06)" : "scale(1)",
-            transition: "transform 0.5s",
-            filter: hovered && canClick ? "brightness(0.95)" : "brightness(0.75)",
-          }}
+          onError={e => { e.target.src = "https://images.unsplash.com/photo-1539020140153-e479b8c22e70?w=400&q=80"; }}
+          style={{ width: "100%", height: "100%", objectFit: "cover", transform: hovered && canClick ? "scale(1.06)" : "scale(1)", transition: "transform 0.5s", filter: hovered && canClick ? "brightness(0.9)" : "brightness(0.75)" }}
         />
-        {/* Overlay arrow hint on hover */}
         {hovered && canClick && (
-          <div style={{
-            position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center",
-            background: "rgba(11,15,26,0.35)",
-          }}>
-            <div style={{ fontSize: "11px", letterSpacing: "3px", color: T.gold, textTransform: "uppercase", background: "rgba(11,15,26,0.7)", padding: "8px 16px", border: `1px solid ${T.goldMuted}` }}>
-              View Hotel →
-            </div>
+          <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(14,11,8,0.4)" }}>
+            <div style={{ fontSize: "10px", letterSpacing: "3px", color: T.sand, textTransform: "uppercase", background: "rgba(196,98,45,0.85)", padding: "8px 18px" }}>View Details →</div>
           </div>
         )}
       </div>
-
-      {/* INFO */}
-      <div style={{ flex: 1, padding: "20px 24px", display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+      {/* Info */}
+      <div style={{ flex: 1, padding: "22px 28px", display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
         <div>
           {hotel.stars > 0 && (
-            <div style={{ fontSize: "11px", color: T.gold, marginBottom: "5px", letterSpacing: "2px" }}>
-              {"★".repeat(Math.min(Math.round(hotel.stars || 0), 5))}
-            </div>
+            <div style={{ fontSize: "11px", color: T.terracotta, marginBottom: "6px", letterSpacing: "2px" }}>{"★".repeat(Math.min(Math.round(hotel.stars || 0), 5))}</div>
           )}
-          <h3 style={{ fontSize: "17px", fontWeight: 400, margin: "0 0 4px", letterSpacing: "-0.2px", color: T.text }}>{hotel.name}</h3>
-          <div style={{ fontSize: "11px", color: T.textMuted, marginBottom: "10px" }}>
+          <h3 style={{ fontFamily: "'Georgia','Times New Roman',serif", fontSize: "18px", fontWeight: 400, margin: "0 0 4px", color: T.sand }}>{hotel.name}</h3>
+          <div style={{ fontSize: "11px", color: T.sandMuted, marginBottom: "12px" }}>
             {[hotel.city, hotel.country].filter(Boolean).join(", ")}
           </div>
           {hotel.rating > 0 && (
             <div style={{ display: "inline-flex", alignItems: "center", gap: "8px" }}>
-              <span style={{ background: T.gold, color: T.bg, padding: "2px 8px", fontSize: "11px", fontWeight: 600 }}>{hotel.rating}/10</span>
-              {hotel.reviewCount > 0 && <span style={{ fontSize: "10px", color: T.textFaint }}>{Number(hotel.reviewCount).toLocaleString()} reviews</span>}
+              <span style={{ background: T.terracotta, color: T.sand, padding: "2px 10px", fontSize: "11px", fontWeight: 600 }}>{hotel.rating}/10</span>
+              {hotel.reviewCount > 0 && <span style={{ fontSize: "10px", color: T.sandFaint }}>{Number(hotel.reviewCount).toLocaleString()} reviews</span>}
             </div>
           )}
-          {hotel.roomName && <div style={{ fontSize: "10px", color: T.textFaint, marginTop: "8px" }}>{hotel.roomName}</div>}
+          {hotel.roomName && <div style={{ fontSize: "10px", color: T.sandFaint, marginTop: "8px" }}>{hotel.roomName}</div>}
         </div>
-
-        <div style={{ textAlign: "right", minWidth: "150px" }}>
+        <div style={{ textAlign: "right", minWidth: "160px" }}>
           {hotel.hasRates ? (
             <>
-              <div style={{ fontSize: "9px", letterSpacing: "2px", color: T.textFaint, textTransform: "uppercase", marginBottom: "3px" }}>From</div>
-              <div style={{ fontSize: "30px", color: T.text, fontWeight: 300, lineHeight: 1 }}>${Math.round(hotel.price)}</div>
-              <div style={{ fontSize: "9px", color: T.textFaint, letterSpacing: "1px", marginBottom: "6px", textTransform: "uppercase" }}>/Night · USD</div>
-              <div style={{ fontSize: "11px", color: T.gold }}>+${hotel.commission} commission</div>
+              <div style={{ fontSize: "9px", letterSpacing: "2px", color: T.sandFaint, textTransform: "uppercase", marginBottom: "4px" }}>From</div>
+              <div style={{ fontFamily: "'Georgia','Times New Roman',serif", fontSize: "32px", color: T.sand, fontWeight: 300, lineHeight: 1 }}>${Math.round(hotel.price)}</div>
+              <div style={{ fontSize: "9px", color: T.sandFaint, letterSpacing: "1px", marginBottom: "8px", textTransform: "uppercase" }}>/Night · USD</div>
+              <div style={{ fontSize: "11px", color: T.terracottaLight }}>+${hotel.commission} commission</div>
             </>
           ) : (
-            <div style={{ fontSize: "10px", color: T.textFaint, letterSpacing: "1px", marginTop: "20px", textTransform: "uppercase" }}>No Availability</div>
+            <div style={{ fontSize: "10px", color: T.sandFaint, letterSpacing: "1px", marginTop: "24px", textTransform: "uppercase" }}>No Availability</div>
           )}
         </div>
       </div>
@@ -116,19 +101,14 @@ export default function Search() {
   const [error, setError] = useState("");
   const [resolvedCity, setResolvedCity] = useState("");
   const [sortBy, setSortBy] = useState("recommended");
-  const [starFilter, setStarFilter] = useState([]);
 
   const doSearch = useCallback(async (dest, cin, cout, adts) => {
     if (!dest) return;
     setLoading(true); setError(""); setHotels([]); setResolvedCity("");
     try {
-      const pRes = await fetch(
-        `https://api.liteapi.travel/v3.0/data/places?textQuery=${encodeURIComponent(dest)}&language=en`,
-        { headers: { "X-API-Key": LITEAPI_KEY } }
-      );
+      const pRes = await fetch(`https://api.liteapi.travel/v3.0/data/places?textQuery=${encodeURIComponent(dest)}&language=en`, { headers: { "X-API-Key": LITEAPI_KEY } });
       const places = (await pRes.json()).data || [];
       if (!places.length) { setError(`No location found for "${dest}".`); setLoading(false); return; }
-
       const destLower = dest.toLowerCase();
       let best = places[0];
       if (destLower.includes(",")) {
@@ -138,33 +118,21 @@ export default function Search() {
       }
       setResolvedCity(best.formattedAddress || best.displayName || dest);
 
-      const hRes = await fetch(
-        `https://api.liteapi.travel/v3.0/data/hotels?placeId=${encodeURIComponent(best.placeId)}&limit=20&language=en`,
-        { headers: { "X-API-Key": LITEAPI_KEY } }
-      );
+      const hRes = await fetch(`https://api.liteapi.travel/v3.0/data/hotels?placeId=${encodeURIComponent(best.placeId)}&limit=20&language=en`, { headers: { "X-API-Key": LITEAPI_KEY } });
       let hotelList = (await hRes.json()).data || [];
-
       if (!hotelList.length && (best.countryCode || best.country_code)) {
         const cc = best.countryCode || best.country_code;
         const city = best.displayName || dest.split(",")[0].trim();
-        const fb = await fetch(
-          `https://api.liteapi.travel/v3.0/data/hotels?countryCode=${cc}&cityName=${encodeURIComponent(city)}&limit=20&language=en`,
-          { headers: { "X-API-Key": LITEAPI_KEY } }
-        );
+        const fb = await fetch(`https://api.liteapi.travel/v3.0/data/hotels?countryCode=${cc}&cityName=${encodeURIComponent(city)}&limit=20&language=en`, { headers: { "X-API-Key": LITEAPI_KEY } });
         hotelList = (await fb.json()).data || [];
       }
-
-      if (!hotelList.length) { setError(`No hotels in ${best.formattedAddress || dest}.`); setLoading(false); return; }
+      if (!hotelList.length) { setError(`No hotels found in ${best.formattedAddress || dest}.`); setLoading(false); return; }
 
       const hotelIds = hotelList.slice(0, 20).map(h => h.id).filter(Boolean);
       const rRes = await fetch("https://api.liteapi.travel/v3.0/hotels/rates", {
         method: "POST",
         headers: { "X-API-Key": LITEAPI_KEY, "Content-Type": "application/json" },
-        body: JSON.stringify({
-          hotelIds, checkin: cin, checkout: cout,
-          occupancies: [{ adults: parseInt(adts) || 2 }],
-          currency: "USD", guestNationality: "US", margin: DEFAULT_MARGIN,
-        }),
+        body: JSON.stringify({ hotelIds, checkin: cin, checkout: cout, occupancies: [{ adults: parseInt(adts) || 2 }], currency: "USD", guestNationality: "US", margin: DEFAULT_MARGIN }),
       });
       const ratesMap = {};
       for (const r of (await rRes.json()).data || []) ratesMap[r.hotelId] = r;
@@ -193,157 +161,154 @@ export default function Search() {
   };
 
   const nights = checkin && checkout ? Math.max(1, Math.ceil((new Date(checkout) - new Date(checkin)) / 86400000)) : 1;
-
-  const displayed = [...hotels]
-    .filter(h => !starFilter.length || starFilter.includes(Math.round(h.stars || 0)))
-    .sort((a, b) => {
-      if (sortBy === "price_low") return (a.price || 99999) - (b.price || 99999);
-      if (sortBy === "price_high") return (b.price || 0) - (a.price || 0);
-      if (sortBy === "rating") return (b.stars || 0) - (a.stars || 0);
-      return (b.hasRates ? 1 : 0) - (a.hasRates ? 1 : 0);
-    });
-
-  const toggleStar = s => setStarFilter(p => p.includes(s) ? p.filter(x => x !== s) : [...p, s]);
-
-  const inputStyle = {
-    background: "transparent", border: "none", borderBottom: `1px solid ${T.border}`,
-    color: T.text, fontSize: "13px", padding: "5px 0", outline: "none",
-    width: "100%", boxSizing: "border-box", colorScheme: "dark",
-  };
+  const displayed = [...hotels].sort((a, b) => {
+    if (sortBy === "price_low") return (a.price || 99999) - (b.price || 99999);
+    if (sortBy === "price_high") return (b.price || 0) - (a.price || 0);
+    if (sortBy === "rating") return (b.stars || 0) - (a.stars || 0);
+    return (b.hasRates ? 1 : 0) - (a.hasRates ? 1 : 0);
+  });
 
   return (
-    <div style={{ fontFamily: "'Georgia','Times New Roman',serif", backgroundColor: T.bg, color: T.text, minHeight: "100vh", display: "flex" }}>
+    <div style={{ fontFamily: "'Georgia','Times New Roman',serif", background: T.bg, color: T.sand, minHeight: "100vh" }}>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap');
+        * { box-sizing: border-box; }
+        input[type=date]::-webkit-calendar-picker-indicator { filter: invert(0.6); cursor: pointer; }
+        ::-webkit-scrollbar { width: 4px; } ::-webkit-scrollbar-track { background: ${T.bg}; } ::-webkit-scrollbar-thumb { background: ${T.border}; }
+        .sort-btn:hover { color: ${T.sand} !important; }
+      `}</style>
 
-      {/* LEFT SIDEBAR */}
-      <aside style={{
-        width: "180px", minWidth: "180px", padding: "28px 20px",
-        borderRight: `1px solid ${T.border}`, display: "flex", flexDirection: "column", justifyContent: "space-between",
-        position: "fixed", top: 0, left: 0, bottom: 0, zIndex: 50, background: T.sidebar, overflowY: "auto",
-      }}>
-        <div>
-          <div style={{ fontSize: "11px", letterSpacing: "3px", color: T.gold, textTransform: "uppercase", marginBottom: "36px", cursor: "pointer" }}
-            onClick={() => navigate("/")}>RACKU VOYAGE</div>
-          {NAV_ITEMS.map(item => (
-            <div key={item} style={{ fontSize: "12px", color: T.textMuted, marginBottom: "10px", cursor: "pointer", transition: "color 0.2s" }}
-              onMouseEnter={e => e.currentTarget.style.color = T.gold}
-              onMouseLeave={e => e.currentTarget.style.color = T.textMuted}
-              onClick={() => navigate("/")}>{item}</div>
-          ))}
-          <div style={{ height: "1px", background: T.border, margin: "18px 0" }} />
-          {RESTAURANT_ITEMS.map(item => (
-            <div key={item} style={{ fontSize: "11px", color: T.textFaint, marginBottom: "9px" }}>{item}</div>
-          ))}
+      {/* TOP NAV */}
+      <nav style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "18px 40px", borderBottom: `1px solid ${T.border}`, background: T.card, position: "sticky", top: 0, zIndex: 100 }}>
+        <div style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: "20px", fontWeight: 300, letterSpacing: "5px", color: T.sand, cursor: "pointer" }} onClick={() => navigate("/")}>
+          Racku<span style={{ color: T.terracotta }}>·</span>Voyage
         </div>
-        <button onClick={() => navigate("/dashboard")} style={{
-          background: "transparent", border: `1px solid ${T.goldMuted}`, color: T.gold,
-          padding: "7px 12px", fontSize: "10px", letterSpacing: "2px", cursor: "pointer", textTransform: "uppercase", width: "100%",
-        }}>Dashboard</button>
-      </aside>
+        <button onClick={() => navigate("/")} style={{ background: "transparent", border: `1px solid ${T.border}`, color: T.sandMuted, padding: "7px 20px", fontSize: "10px", letterSpacing: "2px", cursor: "pointer", textTransform: "uppercase", fontFamily: "inherit", transition: "all 0.2s" }}
+          onMouseEnter={e => { e.currentTarget.style.borderColor = T.terracotta; e.currentTarget.style.color = T.terracotta; }}
+          onMouseLeave={e => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.color = T.sandMuted; }}>
+          ← New Search
+        </button>
+      </nav>
 
-      {/* RIGHT CONTENT */}
-      <div style={{ marginLeft: "180px", flex: 1, display: "flex", flexDirection: "column" }}>
-
-        {/* SEARCH BAR */}
-        <form onSubmit={handleSubmit} style={{
-          display: "flex", alignItems: "flex-end", gap: "20px",
-          padding: "18px 32px", borderBottom: `1px solid ${T.border}`,
-          background: T.bgCard, flexWrap: "wrap",
-        }}>
-          {[
-            { label: "Destination", type: "text", key: "destination", placeholder: "City, country..." },
-            { label: "Check In", type: "date", key: "checkin" },
-            { label: "Check Out", type: "date", key: "checkout" },
-          ].map(({ label, type, key, placeholder }) => (
-            <div key={key} style={{ flex: key === "destination" ? 2 : 1, minWidth: "120px" }}>
-              <div style={{ fontSize: "9px", letterSpacing: "3px", color: T.textFaint, textTransform: "uppercase", marginBottom: "6px" }}>{label}</div>
-              <input type={type} value={form[key]} min={key === "checkin" ? today : key === "checkout" ? form.checkin : undefined}
-                placeholder={placeholder}
-                onChange={e => setForm(f => ({ ...f, [key]: e.target.value }))}
-                style={inputStyle}
+      {/* SEARCH BAR */}
+      <div style={{ background: T.card, padding: "28px 40px", borderBottom: `1px solid ${T.border}` }}>
+        <form onSubmit={handleSubmit}>
+          <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 0.7fr auto", gap: "0", border: `1px solid ${T.borderLight}`, background: T.bg, maxWidth: "1100px" }}>
+            <div style={{ padding: "16px 22px", borderRight: `1px solid ${T.border}` }}>
+              <div style={{ fontSize: "8px", letterSpacing: "3px", color: T.terracotta, textTransform: "uppercase", marginBottom: "5px" }}>Destination</div>
+              <input type="text" placeholder="City, country..." value={form.destination}
+                onChange={e => setForm(f => ({ ...f, destination: e.target.value }))}
+                style={{ width: "100%", background: "transparent", border: "none", color: T.sand, fontSize: "14px", outline: "none", fontFamily: "inherit", padding: 0 }}
               />
             </div>
-          ))}
-          <div style={{ minWidth: "100px" }}>
-            <div style={{ fontSize: "9px", letterSpacing: "3px", color: T.textFaint, textTransform: "uppercase", marginBottom: "6px" }}>Guests</div>
-            <select value={form.adults} onChange={e => setForm(f => ({ ...f, adults: e.target.value }))}
-              style={{ ...inputStyle, cursor: "pointer" }}>
-              {[1,2,3,4,5,6].map(n => <option key={n} value={n} style={{ background: T.bgCard }}>{n} Adult{n>1?"s":""}</option>)}
-            </select>
+            <div style={{ padding: "16px 18px", borderRight: `1px solid ${T.border}` }}>
+              <div style={{ fontSize: "8px", letterSpacing: "3px", color: T.terracotta, textTransform: "uppercase", marginBottom: "5px" }}>Check In</div>
+              <input type="date" value={form.checkin} min={today}
+                onChange={e => setForm(f => ({ ...f, checkin: e.target.value }))}
+                style={{ width: "100%", background: "transparent", border: "none", color: T.sand, fontSize: "13px", outline: "none", fontFamily: "inherit", padding: 0, colorScheme: "dark" }}
+              />
+            </div>
+            <div style={{ padding: "16px 18px", borderRight: `1px solid ${T.border}` }}>
+              <div style={{ fontSize: "8px", letterSpacing: "3px", color: T.terracotta, textTransform: "uppercase", marginBottom: "5px" }}>Check Out</div>
+              <input type="date" value={form.checkout} min={form.checkin || tomorrow}
+                onChange={e => setForm(f => ({ ...f, checkout: e.target.value }))}
+                style={{ width: "100%", background: "transparent", border: "none", color: T.sand, fontSize: "13px", outline: "none", fontFamily: "inherit", padding: 0, colorScheme: "dark" }}
+              />
+            </div>
+            <div style={{ padding: "16px 14px", borderRight: `1px solid ${T.border}` }}>
+              <div style={{ fontSize: "8px", letterSpacing: "3px", color: T.terracotta, textTransform: "uppercase", marginBottom: "5px" }}>Guests</div>
+              <select value={form.adults} onChange={e => setForm(f => ({ ...f, adults: e.target.value }))}
+                style={{ background: "transparent", border: "none", color: T.sand, fontSize: "13px", outline: "none", fontFamily: "inherit", padding: 0, cursor: "pointer" }}>
+                {[1,2,3,4,5,6].map(n => <option key={n} value={n} style={{ background: T.card }}>{n} {n > 1 ? "Adults" : "Adult"}</option>)}
+              </select>
+            </div>
+            <button type="submit" style={{ padding: "0 32px", background: T.terracotta, border: "none", color: T.sand, fontSize: "10px", letterSpacing: "2px", cursor: "pointer", textTransform: "uppercase", fontFamily: "inherit", fontWeight: 600, transition: "background 0.2s" }}
+              onMouseEnter={e => e.currentTarget.style.background = T.terracottaLight}
+              onMouseLeave={e => e.currentTarget.style.background = T.terracotta}>
+              Search
+            </button>
           </div>
-          <button type="submit" style={{
-            background: T.gold, color: T.bg, border: "none", padding: "10px 28px",
-            fontSize: "10px", letterSpacing: "3px", cursor: "pointer", textTransform: "uppercase", fontWeight: 600,
-          }}>Search</button>
         </form>
+      </div>
 
-        <div style={{ display: "flex", flex: 1 }}>
+      {/* RESULTS AREA */}
+      <div style={{ display: "flex", minHeight: "calc(100vh - 200px)" }}>
 
-          {/* FILTER PANEL */}
-          <div style={{ width: "200px", minWidth: "200px", padding: "24px 20px", borderRight: `1px solid ${T.border}`, background: T.sidebar }}>
-            <div style={{ fontSize: "9px", letterSpacing: "4px", color: T.textFaint, textTransform: "uppercase", marginBottom: "20px" }}>Refine</div>
+        {/* SIDEBAR FILTER */}
+        <aside style={{ width: "240px", minWidth: "240px", borderRight: `1px solid ${T.border}`, padding: "32px 24px", background: T.card }}>
+          <div style={{ fontSize: "9px", letterSpacing: "4px", color: T.terracotta, textTransform: "uppercase", marginBottom: "20px" }}>Sort & Filter</div>
 
-            <div style={{ fontSize: "9px", letterSpacing: "3px", color: T.textFaint, textTransform: "uppercase", marginBottom: "12px" }}>Sort By</div>
+          <div style={{ marginBottom: "28px" }}>
+            <div style={{ fontSize: "10px", letterSpacing: "2px", color: T.sandFaint, textTransform: "uppercase", marginBottom: "12px" }}>Sort By</div>
             {[["recommended","Recommended"],["price_low","Price: Low → High"],["price_high","Price: High → Low"],["rating","Star Rating"]].map(([val, label]) => (
-              <label key={val} style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "10px", cursor: "pointer" }}>
-                <div style={{ width: "10px", height: "10px", borderRadius: "50%", border: `2px solid ${sortBy === val ? T.gold : T.border}`, background: sortBy === val ? T.gold : "transparent", flexShrink: 0, transition: "all 0.2s" }} onClick={() => setSortBy(val)} />
-                <span style={{ fontSize: "11px", color: sortBy === val ? T.gold : T.textMuted }}>{label}</span>
-              </label>
-            ))}
-
-            <div style={{ height: "1px", background: T.border, margin: "18px 0" }} />
-
-            <div style={{ fontSize: "9px", letterSpacing: "3px", color: T.textFaint, textTransform: "uppercase", marginBottom: "12px" }}>Stars</div>
-            {[5,4,3,2].map(s => (
-              <label key={s} style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "10px", cursor: "pointer" }}>
-                <input type="checkbox" checked={starFilter.includes(s)} onChange={() => toggleStar(s)} style={{ accentColor: T.gold }} />
-                <span style={{ fontSize: "11px", color: T.gold }}>{"★".repeat(s)}</span>
-              </label>
-            ))}
-
-            <div style={{ height: "1px", background: T.border, margin: "18px 0" }} />
-            <div style={{ background: T.bgCard, border: `1px solid ${T.border}`, padding: "16px", textAlign: "center" }}>
-              <div style={{ fontSize: "9px", letterSpacing: "3px", color: T.textFaint, textTransform: "uppercase", marginBottom: "6px" }}>Margin</div>
-              <div style={{ fontSize: "28px", color: T.gold, fontWeight: 300 }}>15%</div>
-              <div style={{ fontSize: "9px", color: T.textFaint, letterSpacing: "1px" }}>Per Booking</div>
-            </div>
-          </div>
-
-          {/* RESULTS */}
-          <div style={{ flex: 1, overflowY: "auto" }}>
-            {/* Header */}
-            <div style={{ padding: "20px 32px", borderBottom: `1px solid ${T.border}`, background: T.bg }}>
-              {loading ? (
-                <div style={{ fontSize: "13px", color: T.textMuted }}>Searching hotels...</div>
-              ) : resolvedCity ? (
-                <div>
-                  <div style={{ fontSize: "24px", fontWeight: 300, color: T.text, marginBottom: "4px" }}>
-                    {resolvedCity.split(",")[0]}
-                  </div>
-                  <div style={{ fontSize: "12px", color: T.textMuted }}>
-                    {displayed.length} available · {nights} night{nights > 1 ? "s" : ""} · {adults} guest{parseInt(adults) > 1 ? "s" : ""} · <span style={{ color: T.textFaint }}>Click any hotel to explore</span>
-                  </div>
-                </div>
-              ) : error ? (
-                <div style={{ fontSize: "13px", color: "#E57373" }}>{error}</div>
-              ) : null}
-            </div>
-
-            {loading && (
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: "80px", flexDirection: "column", gap: "16px" }}>
-                <div style={{ width: "32px", height: "32px", border: `2px solid ${T.border}`, borderTop: `2px solid ${T.gold}`, borderRadius: "50%", animation: "spin 1s linear infinite" }} />
-                <div style={{ fontSize: "11px", color: T.textFaint, letterSpacing: "3px", textTransform: "uppercase" }}>Finding hotels...</div>
-                <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+              <div key={val} onClick={() => setSortBy(val)} style={{ padding: "8px 0", fontSize: "12px", color: sortBy === val ? T.terracottaLight : T.sandMuted, borderLeft: `2px solid ${sortBy === val ? T.terracotta : "transparent"}`, paddingLeft: "12px", cursor: "pointer", transition: "all 0.2s", marginBottom: "2px" }}>
+                {label}
               </div>
-            )}
-
-            {!loading && displayed.map((hotel, i) => (
-              <HotelCard key={hotel.id || i} hotel={hotel} checkin={checkin} checkout={checkout} adults={adults} navigate={navigate} />
             ))}
-
-            {!loading && !displayed.length && !error && resolvedCity && (
-              <div style={{ textAlign: "center", padding: "80px", color: T.textFaint, fontSize: "13px" }}>No hotels match your filters.</div>
-            )}
           </div>
+
+          {resolvedCity && (
+            <div style={{ padding: "14px", border: `1px solid ${T.border}`, background: T.bg }}>
+              <div style={{ fontSize: "8px", letterSpacing: "3px", color: T.sandFaint, textTransform: "uppercase", marginBottom: "5px" }}>Showing Results For</div>
+              <div style={{ fontSize: "12px", color: T.sand }}>{resolvedCity}</div>
+            </div>
+          )}
+
+          {hotels.length > 0 && (
+            <div style={{ marginTop: "24px", padding: "14px", border: `1px solid ${T.border}`, background: T.bg }}>
+              <div style={{ fontSize: "8px", letterSpacing: "3px", color: T.sandFaint, textTransform: "uppercase", marginBottom: "10px" }}>Availability</div>
+              <div style={{ fontSize: "22px", fontFamily: "'Georgia',serif", color: T.terracottaLight, fontWeight: 300 }}>{hotels.filter(h => h.hasRates).length}</div>
+              <div style={{ fontSize: "10px", color: T.sandFaint }}>of {hotels.length} hotels available</div>
+            </div>
+          )}
+
+          <div style={{ marginTop: "24px" }}>
+            <button onClick={() => navigate("/dashboard")} style={{ width: "100%", background: "transparent", border: `1px solid ${T.border}`, color: T.sandMuted, padding: "10px", fontSize: "10px", letterSpacing: "2px", cursor: "pointer", textTransform: "uppercase", fontFamily: "inherit", transition: "all 0.2s" }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = T.terracotta; e.currentTarget.style.color = T.terracotta; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.color = T.sandMuted; }}>
+              Dashboard
+            </button>
+          </div>
+        </aside>
+
+        {/* HOTEL LIST */}
+        <div style={{ flex: 1, padding: "0" }}>
+          {/* Header bar */}
+          {(hotels.length > 0 || loading) && (
+            <div style={{ padding: "18px 32px", borderBottom: `1px solid ${T.border}`, background: T.bg, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div style={{ fontSize: "12px", color: T.sandMuted }}>
+                {loading ? "Searching..." : `${displayed.filter(h => h.hasRates).length} properties available · ${nights} night${nights > 1 ? "s" : ""}`}
+              </div>
+              {destination && <div style={{ fontSize: "11px", color: T.sandFaint }}>{destination}</div>}
+            </div>
+          )}
+
+          {loading && (
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "100px 0", gap: "20px" }}>
+              <div style={{ width: "40px", height: "40px", border: `2px solid ${T.border}`, borderTop: `2px solid ${T.terracotta}`, borderRadius: "50%", animation: "spin 1s linear infinite" }} />
+              <div style={{ fontSize: "10px", letterSpacing: "5px", color: T.sandFaint, textTransform: "uppercase" }}>Searching Hotels...</div>
+              <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+            </div>
+          )}
+
+          {!loading && error && (
+            <div style={{ padding: "60px 32px", textAlign: "center" }}>
+              <div style={{ fontSize: "13px", color: "#E57373", marginBottom: "20px" }}>{error}</div>
+              <button onClick={() => navigate("/")} style={{ background: T.terracotta, color: T.sand, border: "none", padding: "10px 28px", cursor: "pointer", fontSize: "10px", letterSpacing: "3px", textTransform: "uppercase", fontFamily: "inherit" }}>New Search</button>
+            </div>
+          )}
+
+          {!loading && !error && hotels.length === 0 && destination && (
+            <div style={{ padding: "80px 32px", textAlign: "center" }}>
+              <div style={{ fontSize: "10px", letterSpacing: "4px", color: T.sandFaint, textTransform: "uppercase", marginBottom: "16px" }}>No Results</div>
+              <div style={{ fontFamily: "'Georgia',serif", fontSize: "28px", fontWeight: 300, color: T.sand, marginBottom: "12px" }}>No hotels found</div>
+              <div style={{ fontSize: "13px", color: T.sandMuted }}>Try a different destination or adjust your dates.</div>
+            </div>
+          )}
+
+          {!loading && displayed.map(hotel => (
+            <HotelCard key={hotel.id} hotel={hotel} checkin={checkin} checkout={checkout} adults={adults} navigate={navigate} />
+          ))}
         </div>
       </div>
     </div>

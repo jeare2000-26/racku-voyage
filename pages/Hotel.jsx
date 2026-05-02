@@ -3,13 +3,20 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 
 const LITEAPI_KEY = "prod_4924ac14-f585-4c07-98cf-51ea994bdcaf";
 const DEFAULT_MARGIN = 15;
-const NAV_ITEMS = ["Rooms", "Gallery", "Conference Halls", "About", "Specials", "News", "Contact"];
-const RESTAURANT_ITEMS = ["Restaurant", "Lobby Bar", "Basement Bar", "Rooftop Bar"];
 
 const T = {
-  bg: "#0B0F1A", bgCard: "#111827", bgCardHover: "#161D2E", sidebar: "#0D1120",
-  border: "#1E2A3D", gold: "#C9A84C", goldLight: "#E0C06A", goldMuted: "#8A6E32",
-  text: "#F0EAD6", textMuted: "#8A99B8", textFaint: "#4A5568", white: "#FFFFFF",
+  bg: "#0E0B08",
+  sand: "#F5EDD6",
+  sandMuted: "#C8B89A",
+  sandFaint: "#7A6B55",
+  terracotta: "#C4622D",
+  terracottaLight: "#D97B4A",
+  terracottaDark: "#8C3F18",
+  teal: "#1B4B4B",
+  card: "#17120D",
+  cardHover: "#1F1812",
+  border: "#2E2318",
+  borderLight: "#3D3022",
 };
 
 function stripHtml(html) {
@@ -33,9 +40,7 @@ export default function Hotel() {
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [activeImg, setActiveImg] = useState(0);
 
-  const nights = checkin && checkout
-    ? Math.max(1, Math.ceil((new Date(checkout) - new Date(checkin)) / 86400000))
-    : 1;
+  const nights = checkin && checkout ? Math.max(1, Math.ceil((new Date(checkout) - new Date(checkin)) / 86400000)) : 1;
 
   useEffect(() => {
     if (!id) { setError("No hotel ID provided."); setLoading(false); return; }
@@ -63,9 +68,9 @@ export default function Hotel() {
   }, [id, checkin, checkout, adults]);
 
   if (loading) return (
-    <div style={{ background: T.bg, minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "Georgia, serif", flexDirection: "column", gap: "16px" }}>
-      <div style={{ width: "32px", height: "32px", border: `2px solid ${T.border}`, borderTop: `2px solid ${T.gold}`, borderRadius: "50%", animation: "spin 1s linear infinite" }} />
-      <div style={{ fontSize: "11px", color: T.textFaint, letterSpacing: "5px", textTransform: "uppercase" }}>Loading hotel...</div>
+    <div style={{ background: T.bg, minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "Georgia, serif", flexDirection: "column", gap: "20px" }}>
+      <div style={{ width: "36px", height: "36px", border: `2px solid ${T.border}`, borderTop: `2px solid ${T.terracotta}`, borderRadius: "50%", animation: "spin 1s linear infinite" }} />
+      <div style={{ fontSize: "10px", color: T.sandFaint, letterSpacing: "5px", textTransform: "uppercase" }}>Loading Property...</div>
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   );
@@ -73,14 +78,14 @@ export default function Hotel() {
   if (error || !hotel) return (
     <div style={{ background: T.bg, minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "Georgia, serif" }}>
       <div style={{ textAlign: "center" }}>
-        <div style={{ fontSize: "13px", color: "#E57373", marginBottom: "20px" }}>{error || "Hotel not found"}</div>
-        <button onClick={() => navigate(-1)} style={{ background: T.gold, color: T.bg, border: "none", padding: "10px 24px", cursor: "pointer", fontSize: "10px", letterSpacing: "3px", textTransform: "uppercase", fontWeight: 600 }}>← Go Back</button>
+        <div style={{ fontSize: "13px", color: "#E57373", marginBottom: "24px" }}>{error || "Hotel not found"}</div>
+        <button onClick={() => navigate(-1)} style={{ background: T.terracotta, color: T.sand, border: "none", padding: "12px 28px", cursor: "pointer", fontSize: "10px", letterSpacing: "3px", textTransform: "uppercase", fontFamily: "inherit" }}>← Go Back</button>
       </div>
     </div>
   );
 
   const photos = (hotel.hotelImages || []).map(img => img.url || img.urlHd).filter(Boolean);
-  const mainPhoto = photos[activeImg] || "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?w=1200&q=80";
+  const mainPhoto = photos[activeImg] || "https://images.unsplash.com/photo-1539020140153-e479b8c22e70?w=1600&q=90";
   const facilities = hotel.hotelFacilities || [];
   const description = stripHtml(hotel.hotelDescription || hotel.description || "");
   const addressStr = typeof hotel.address === "string"
@@ -95,180 +100,213 @@ export default function Hotel() {
   const bookUrl = `/book?hotelId=${id}&rateId=${encodeURIComponent(selectedRate?.rateId || "")}&checkin=${checkin}&checkout=${checkout}&adults=${adults}&hotelName=${encodeURIComponent(hotel.name)}&roomName=${encodeURIComponent(selectedRoom?.name || "")}&price=${totalPrice}&commission=${totalCommission}`;
 
   return (
-    <div style={{ fontFamily: "'Georgia','Times New Roman',serif", backgroundColor: T.bg, color: T.text, minHeight: "100vh", display: "flex" }}>
+    <div style={{ fontFamily: "'Georgia','Times New Roman',serif", background: T.bg, color: T.sand, minHeight: "100vh" }}>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap');
+        * { box-sizing: border-box; }
+        ::-webkit-scrollbar { width: 4px; } ::-webkit-scrollbar-track { background: ${T.bg}; } ::-webkit-scrollbar-thumb { background: ${T.border}; }
+        .room-card:hover { border-color: ${T.terracotta} !important; background: ${T.cardHover} !important; }
+        .thumb-img:hover { opacity: 1 !important; }
+      `}</style>
 
-      {/* SIDEBAR */}
-      <aside style={{ width: "180px", minWidth: "180px", padding: "28px 20px", borderRight: `1px solid ${T.border}`, display: "flex", flexDirection: "column", justifyContent: "space-between", position: "fixed", top: 0, left: 0, bottom: 0, zIndex: 50, background: T.sidebar, overflowY: "auto" }}>
-        <div>
-          <div style={{ fontSize: "11px", letterSpacing: "3px", color: T.gold, textTransform: "uppercase", marginBottom: "36px", cursor: "pointer" }} onClick={() => navigate("/")}>RACKU VOYAGE</div>
-          {NAV_ITEMS.map(item => (
-            <div key={item} style={{ fontSize: "12px", color: T.textMuted, marginBottom: "10px", cursor: "pointer", transition: "color 0.2s" }}
-              onMouseEnter={e => e.currentTarget.style.color = T.gold}
-              onMouseLeave={e => e.currentTarget.style.color = T.textMuted}
-              onClick={() => navigate("/")}>{item}</div>
-          ))}
-          <div style={{ height: "1px", background: T.border, margin: "18px 0" }} />
-          {RESTAURANT_ITEMS.map(item => (
-            <div key={item} style={{ fontSize: "11px", color: T.textFaint, marginBottom: "9px" }}>{item}</div>
-          ))}
+      {/* NAV */}
+      <nav style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "18px 40px", background: "rgba(14,11,8,0.95)", backdropFilter: "blur(6px)", position: "fixed", top: 0, left: 0, right: 0, zIndex: 100, borderBottom: `1px solid ${T.border}` }}>
+        <div style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: "20px", fontWeight: 300, letterSpacing: "5px", color: T.sand, cursor: "pointer" }} onClick={() => navigate("/")}>
+          Racku<span style={{ color: T.terracotta }}>·</span>Voyage
         </div>
-        <button onClick={() => navigate(-1)} style={{ background: "transparent", border: `1px solid ${T.goldMuted}`, color: T.gold, padding: "7px 12px", fontSize: "10px", letterSpacing: "2px", cursor: "pointer", textTransform: "uppercase", width: "100%" }}>← Back</button>
-      </aside>
+        <button onClick={() => navigate(-1)} style={{ background: "transparent", border: `1px solid ${T.border}`, color: T.sandMuted, padding: "7px 20px", fontSize: "10px", letterSpacing: "2px", cursor: "pointer", textTransform: "uppercase", fontFamily: "inherit", transition: "all 0.2s" }}
+          onMouseEnter={e => { e.currentTarget.style.borderColor = T.terracotta; e.currentTarget.style.color = T.terracotta; }}
+          onMouseLeave={e => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.color = T.sandMuted; }}>
+          ← Back to Results
+        </button>
+      </nav>
 
-      {/* MAIN */}
-      <main style={{ marginLeft: "180px", flex: 1 }}>
-
-        {/* HERO */}
-        <div style={{ position: "relative", height: "480px", overflow: "hidden" }}>
+      {/* HERO GALLERY */}
+      <div style={{ paddingTop: "62px" }}>
+        <div style={{ position: "relative", height: "520px", overflow: "hidden" }}>
           <img src={mainPhoto} alt={hotel.name}
-            onError={e => { e.target.src = "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?w=1200&q=80"; }}
-            style={{ width: "100%", height: "100%", objectFit: "cover", filter: "brightness(0.75)" }}
+            onError={e => { e.target.src = "https://images.unsplash.com/photo-1539020140153-e479b8c22e70?w=1600&q=90"; }}
+            style={{ width: "100%", height: "100%", objectFit: "cover", filter: "brightness(0.75)", transition: "opacity 0.4s" }}
           />
-          <div style={{ position: "absolute", inset: 0, background: `linear-gradient(to bottom, transparent 40%, ${T.bg} 100%)` }} />
-          <button onClick={() => navigate(-1)} style={{
-            position: "absolute", top: "24px", right: "32px",
-            background: "rgba(11,15,26,0.8)", border: `1px solid ${T.goldMuted}`, color: T.gold,
-            padding: "8px 16px", fontSize: "10px", letterSpacing: "2px", cursor: "pointer", textTransform: "uppercase",
-          }}>← Results</button>
+          <div style={{ position: "absolute", inset: 0, background: `linear-gradient(to bottom, transparent 50%, ${T.bg} 100%)` }} />
+
+          {/* Hotel name overlay */}
+          <div style={{ position: "absolute", bottom: "40px", left: "48px" }}>
+            {(hotel.stars || 0) > 0 && (
+              <div style={{ fontSize: "13px", color: T.terracottaLight, marginBottom: "8px", letterSpacing: "3px" }}>
+                {"★".repeat(Math.min(Math.round(hotel.stars || 0), 5))}
+              </div>
+            )}
+            <h1 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: "clamp(32px, 4vw, 54px)", fontWeight: 300, margin: "0 0 6px", color: T.sand, textShadow: "0 2px 12px rgba(0,0,0,0.6)" }}>
+              {hotel.name}
+            </h1>
+            <div style={{ fontSize: "13px", color: T.sandMuted }}>{addressStr}</div>
+          </div>
+
+          {/* Rating badge */}
+          {hotel.rating > 0 && (
+            <div style={{ position: "absolute", bottom: "50px", right: "48px", textAlign: "center", background: "rgba(14,11,8,0.85)", border: `1px solid ${T.terracottaDark}`, padding: "14px 20px" }}>
+              <div style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: "32px", fontWeight: 300, color: T.terracottaLight, lineHeight: 1 }}>{hotel.rating}</div>
+              <div style={{ fontSize: "9px", letterSpacing: "2px", color: T.sandFaint, textTransform: "uppercase", marginTop: "3px" }}>/ 10</div>
+              {hotel.reviewCount > 0 && <div style={{ fontSize: "10px", color: T.sandFaint, marginTop: "4px" }}>{Number(hotel.reviewCount).toLocaleString()} reviews</div>}
+            </div>
+          )}
         </div>
 
-        {/* PHOTO STRIP */}
+        {/* Thumbnail strip */}
         {photos.length > 1 && (
-          <div style={{ display: "flex", gap: "4px", padding: "8px 48px", overflowX: "auto", background: T.bg }}>
-            {photos.slice(0, 8).map((url, i) => (
+          <div style={{ display: "flex", gap: "3px", padding: "8px 48px", background: T.bg, overflowX: "auto" }}>
+            {photos.slice(0, 10).map((url, i) => (
               <img key={i} src={url} alt="" onClick={() => setActiveImg(i)}
+                className="thumb-img"
                 onError={e => { e.target.style.display = "none"; }}
-                style={{ width: "80px", height: "52px", objectFit: "cover", cursor: "pointer", flexShrink: 0, border: `1px solid ${activeImg === i ? T.gold : "transparent"}`, opacity: activeImg === i ? 1 : 0.45, transition: "all 0.2s", filter: "brightness(0.85)" }}
+                style={{ width: "88px", height: "58px", objectFit: "cover", cursor: "pointer", flexShrink: 0, border: `2px solid ${activeImg === i ? T.terracotta : "transparent"}`, opacity: activeImg === i ? 1 : 0.5, transition: "all 0.2s" }}
               />
             ))}
           </div>
         )}
+      </div>
 
-        {/* BODY */}
-        <div style={{ display: "flex", padding: "40px 48px 60px", gap: "48px" }}>
+      {/* BODY */}
+      <div style={{ display: "flex", padding: "40px 48px 80px", gap: "60px", maxWidth: "1400px" }}>
 
-          {/* LEFT */}
-          <div style={{ flex: 1 }}>
-            {(hotel.stars || 0) > 0 && (
-              <div style={{ fontSize: "13px", color: T.gold, marginBottom: "10px", letterSpacing: "2px" }}>
-                {"★".repeat(Math.min(Math.round(hotel.stars || 0), 5))}
+        {/* LEFT CONTENT */}
+        <div style={{ flex: 1, minWidth: 0 }}>
+
+          {/* Description */}
+          {description && (
+            <div style={{ marginBottom: "48px", paddingBottom: "48px", borderBottom: `1px solid ${T.border}` }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "14px", marginBottom: "20px" }}>
+                <div style={{ width: "32px", height: "1px", background: T.terracotta }} />
+                <span style={{ fontSize: "9px", letterSpacing: "4px", color: T.terracotta, textTransform: "uppercase" }}>About This Property</span>
               </div>
-            )}
-            <h1 style={{ fontSize: "clamp(28px, 3.5vw, 44px)", fontWeight: 300, margin: "0 0 8px", letterSpacing: "-0.5px", color: T.text }}>{hotel.name}</h1>
-            <div style={{ fontSize: "12px", color: T.textMuted, marginBottom: "28px" }}>{addressStr}</div>
+              <p style={{ fontSize: "15px", lineHeight: 1.9, color: T.sandMuted, margin: 0, maxWidth: "640px" }}>
+                {description.slice(0, 700)}{description.length > 700 ? "..." : ""}
+              </p>
+            </div>
+          )}
 
-            {hotel.rating > 0 && (
-              <div style={{ display: "inline-flex", alignItems: "center", gap: "10px", marginBottom: "32px" }}>
-                <span style={{ background: T.gold, color: T.bg, padding: "3px 10px", fontSize: "12px", fontWeight: 600 }}>{hotel.rating}/10</span>
-                {hotel.reviewCount > 0 && <span style={{ fontSize: "11px", color: T.textFaint }}>{Number(hotel.reviewCount).toLocaleString()} reviews</span>}
+          {/* Facilities */}
+          {facilities.length > 0 && (
+            <div style={{ marginBottom: "48px", paddingBottom: "48px", borderBottom: `1px solid ${T.border}` }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "14px", marginBottom: "20px" }}>
+                <div style={{ width: "32px", height: "1px", background: T.terracotta }} />
+                <span style={{ fontSize: "9px", letterSpacing: "4px", color: T.terracotta, textTransform: "uppercase" }}>Amenities</span>
               </div>
-            )}
-
-            {description && (
-              <div style={{ marginBottom: "40px" }}>
-                <div style={{ fontSize: "9px", letterSpacing: "4px", color: T.textFaint, textTransform: "uppercase", marginBottom: "14px" }}>About</div>
-                <p style={{ fontSize: "14px", lineHeight: 1.9, color: T.textMuted, margin: 0, maxWidth: "600px" }}>
-                  {description.slice(0, 600)}{description.length > 600 ? "..." : ""}
-                </p>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "8px" }}>
+                {facilities.slice(0, 12).map((f, i) => (
+                  <div key={i} style={{ display: "flex", alignItems: "center", gap: "8px", padding: "10px 14px", background: T.card, border: `1px solid ${T.border}` }}>
+                    <span style={{ color: T.terracotta, fontSize: "12px" }}>✦</span>
+                    <span style={{ fontSize: "11px", color: T.sandMuted, letterSpacing: "0.3px" }}>{typeof f === "string" ? f : f.facilityName || f.name || JSON.stringify(f)}</span>
+                  </div>
+                ))}
               </div>
-            )}
+            </div>
+          )}
 
-            {facilities.length > 0 && (
-              <div style={{ marginBottom: "40px" }}>
-                <div style={{ fontSize: "9px", letterSpacing: "4px", color: T.textFaint, textTransform: "uppercase", marginBottom: "14px" }}>Amenities</div>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "8px 24px" }}>
-                  {facilities.slice(0, 16).map((f, i) => (
-                    <div key={i} style={{ fontSize: "12px", color: T.textMuted, display: "flex", alignItems: "center", gap: "8px" }}>
-                      <span style={{ color: T.goldMuted }}>◆</span> {f}
-                    </div>
-                  ))}
-                </div>
+          {/* Room selection */}
+          {rates.length > 0 && (
+            <div>
+              <div style={{ display: "flex", alignItems: "center", gap: "14px", marginBottom: "20px" }}>
+                <div style={{ width: "32px", height: "1px", background: T.terracotta }} />
+                <span style={{ fontSize: "9px", letterSpacing: "4px", color: T.terracotta, textTransform: "uppercase" }}>Available Rooms</span>
               </div>
-            )}
-
-            {/* ROOMS */}
-            {rates.length > 0 && (
-              <div>
-                <div style={{ fontSize: "9px", letterSpacing: "4px", color: T.textFaint, textTransform: "uppercase", marginBottom: "14px" }}>Select Room</div>
-                <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
-                  {rates.map((room, idx) => {
-                    const rate = room.rates?.[0];
-                    const price = rate?.retailRate?.total?.[0]?.amount || 0;
-                    const commission = Math.round(price * DEFAULT_MARGIN / 100);
-                    const isSelected = selectedRoom === room;
-                    return (
-                      <div key={idx} onClick={() => setSelectedRoom(room)} style={{
-                        padding: "18px 20px", background: isSelected ? T.bgCardHover : T.bgCard,
-                        cursor: "pointer", transition: "background 0.2s",
-                        borderLeft: `3px solid ${isSelected ? T.gold : "transparent"}`,
-                        border: `1px solid ${isSelected ? T.gold : T.border}`,
-                        marginBottom: "2px",
-                      }}>
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                          <div>
-                            <div style={{ fontSize: "14px", marginBottom: "4px", color: T.text }}>{room.name || `Room ${idx + 1}`}</div>
-                            <div style={{ fontSize: "11px", color: T.textFaint }}>{rate?.boardName || "Room Only"}</div>
-                          </div>
-                          {price > 0 && (
-                            <div style={{ textAlign: "right" }}>
-                              <div style={{ fontSize: "24px", color: T.text, fontWeight: 300, lineHeight: 1 }}>${Math.round(price)}</div>
-                              <div style={{ fontSize: "9px", color: T.textFaint, letterSpacing: "1px", textTransform: "uppercase" }}>/Night</div>
-                              <div style={{ fontSize: "10px", color: T.gold, marginTop: "2px" }}>+${commission} commission</div>
-                            </div>
-                          )}
+              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                {rates.map((room, i) => {
+                  const rate = room.rates?.[0];
+                  const price = rate?.retailRate?.total?.[0]?.amount || 0;
+                  const isSelected = selectedRoom?.name === room.name;
+                  return (
+                    <div key={i} className="room-card" onClick={() => setSelectedRoom(room)}
+                      style={{ padding: "20px 24px", border: `1px solid ${isSelected ? T.terracotta : T.border}`, background: isSelected ? T.cardHover : T.card, cursor: "pointer", transition: "all 0.2s", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <div>
+                        <div style={{ fontSize: "15px", color: T.sand, marginBottom: "4px", fontFamily: "'Georgia',serif" }}>{room.name}</div>
+                        <div style={{ fontSize: "10px", color: T.sandFaint, letterSpacing: "1px" }}>
+                          {rate?.cancellationPolicies?.cancelPolicyInfos?.[0]?.cancelTime ? "Free cancellation available" : "Standard rate"}
                         </div>
                       </div>
-                    );
-                  })}
-                </div>
+                      <div style={{ textAlign: "right" }}>
+                        {price > 0 && (
+                          <>
+                            <div style={{ fontFamily: "'Georgia',serif", fontSize: "22px", color: T.sand, fontWeight: 300 }}>${Math.round(price)}</div>
+                            <div style={{ fontSize: "9px", color: T.sandFaint, textTransform: "uppercase", letterSpacing: "1px" }}>/night</div>
+                            {isSelected && <div style={{ fontSize: "10px", color: T.terracottaLight, marginTop: "4px" }}>Selected ✓</div>}
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
-            )}
-          </div>
+            </div>
+          )}
 
-          {/* RIGHT — booking summary */}
-          <div style={{ width: "270px", minWidth: "270px" }}>
-            <div style={{ border: `1px solid ${T.border}`, padding: "24px", background: T.bgCard, position: "sticky", top: "20px" }}>
-              <div style={{ fontSize: "9px", letterSpacing: "4px", color: T.gold, textTransform: "uppercase", marginBottom: "18px" }}>Your Booking</div>
-              {[
-                ["Hotel", hotel.name],
-                ["Check In", checkin || "—"],
-                ["Check Out", checkout || "—"],
-                ["Nights", nights],
-                ["Guests", `${adults} Adult${parseInt(adults) > 1 ? "s" : ""}`],
-                ["Room", selectedRoom?.name || "—"],
-              ].map(([k, v]) => (
-                <div key={k} style={{ display: "flex", justifyContent: "space-between", padding: "7px 0", borderBottom: `1px solid ${T.border}` }}>
-                  <span style={{ fontSize: "9px", letterSpacing: "2px", color: T.textFaint, textTransform: "uppercase" }}>{k}</span>
-                  <span style={{ fontSize: "11px", color: T.textMuted, textAlign: "right", maxWidth: "150px" }}>{String(v)}</span>
+          {rates.length === 0 && !loading && (
+            <div style={{ padding: "32px", border: `1px solid ${T.border}`, background: T.card, textAlign: "center" }}>
+              <div style={{ fontSize: "12px", color: T.sandFaint, letterSpacing: "3px", textTransform: "uppercase" }}>No availability for selected dates</div>
+            </div>
+          )}
+        </div>
+
+        {/* RIGHT: BOOKING PANEL */}
+        <div style={{ width: "340px", minWidth: "340px", position: "sticky", top: "82px", alignSelf: "flex-start" }}>
+          <div style={{ border: `1px solid ${T.borderLight}`, background: T.card }}>
+            {/* Header */}
+            <div style={{ padding: "24px 28px", borderBottom: `1px solid ${T.border}`, background: `linear-gradient(135deg, ${T.terracottaDark}, #4A1A08)` }}>
+              <div style={{ fontSize: "9px", letterSpacing: "4px", color: T.sandMuted, textTransform: "uppercase", marginBottom: "6px" }}>Book Your Stay</div>
+              <div style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: "22px", fontWeight: 300, color: T.sand }}>{hotel.name}</div>
+            </div>
+
+            <div style={{ padding: "24px 28px" }}>
+              {/* Dates */}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "2px", marginBottom: "20px" }}>
+                {[["Check In", checkin], ["Check Out", checkout]].map(([label, val]) => (
+                  <div key={label} style={{ padding: "12px 14px", background: T.bg, border: `1px solid ${T.border}` }}>
+                    <div style={{ fontSize: "8px", letterSpacing: "2px", color: T.sandFaint, textTransform: "uppercase", marginBottom: "4px" }}>{label}</div>
+                    <div style={{ fontSize: "13px", color: T.sand }}>{val || "—"}</div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Stay summary */}
+              <div style={{ padding: "14px", background: T.bg, border: `1px solid ${T.border}`, marginBottom: "20px" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
+                  <span style={{ fontSize: "11px", color: T.sandFaint }}>{nights} night{nights > 1 ? "s" : ""} · {adults} guest{parseInt(adults) > 1 ? "s" : ""}</span>
+                  <span style={{ fontSize: "11px", color: T.sandMuted }}>{selectedRoom?.name || "Select a room"}</span>
                 </div>
-              ))}
-              {selectedPrice > 0 && (
-                <>
-                  <div style={{ marginTop: "14px", paddingTop: "14px", borderTop: `1px solid ${T.border}` }}>
+                {selectedRoom && (
+                  <div style={{ borderTop: `1px solid ${T.border}`, paddingTop: "10px" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px" }}>
-                      <span style={{ fontSize: "11px", color: T.textMuted }}>${Math.round(selectedPrice)} × {nights} night{nights > 1 ? "s" : ""}</span>
-                      <span style={{ fontSize: "13px", color: T.text }}>${totalPrice}</span>
+                      <span style={{ fontSize: "11px", color: T.sandFaint }}>Total</span>
+                      <span style={{ fontFamily: "'Georgia',serif", fontSize: "20px", color: T.sand, fontWeight: 300 }}>${totalPrice}</span>
                     </div>
                     <div style={{ display: "flex", justifyContent: "space-between" }}>
-                      <span style={{ fontSize: "10px", color: T.gold }}>Commission ({DEFAULT_MARGIN}%)</span>
-                      <span style={{ fontSize: "12px", color: T.gold }}>+${totalCommission}</span>
+                      <span style={{ fontSize: "10px", color: T.sandFaint }}>Your commission</span>
+                      <span style={{ fontSize: "13px", color: T.terracottaLight }}>+${totalCommission}</span>
                     </div>
                   </div>
-                  <button type="button" onClick={() => navigate(bookUrl)}
-                    style={{ width: "100%", background: T.gold, color: T.bg, border: "none", padding: "14px", fontSize: "10px", letterSpacing: "3px", cursor: "pointer", textTransform: "uppercase", marginTop: "18px", fontWeight: 600, transition: "all 0.2s" }}
-                    onMouseEnter={e => e.currentTarget.style.background = T.goldLight}
-                    onMouseLeave={e => e.currentTarget.style.background = T.gold}>
-                    Book Now · ${totalPrice}
-                  </button>
-                </>
+                )}
+              </div>
+
+              {selectedRoom && selectedRate ? (
+                <button onClick={() => navigate(bookUrl)} style={{ width: "100%", background: T.terracotta, color: T.sand, border: "none", padding: "16px", fontSize: "11px", letterSpacing: "3px", cursor: "pointer", textTransform: "uppercase", fontFamily: "inherit", fontWeight: 600, transition: "background 0.2s" }}
+                  onMouseEnter={e => e.currentTarget.style.background = T.terracottaLight}
+                  onMouseLeave={e => e.currentTarget.style.background = T.terracotta}>
+                  Reserve This Room
+                </button>
+              ) : (
+                <div style={{ width: "100%", background: T.border, color: T.sandFaint, padding: "16px", fontSize: "11px", letterSpacing: "3px", textTransform: "uppercase", fontFamily: "inherit", textAlign: "center" }}>
+                  {rates.length === 0 ? "No Availability" : "Select a Room"}
+                </div>
               )}
-              {rates.length === 0 && !loading && (
-                <div style={{ marginTop: "14px", fontSize: "11px", color: T.textFaint, textAlign: "center", lineHeight: 1.8 }}>No availability for these dates.</div>
-              )}
+
+              <div style={{ fontSize: "10px", color: T.sandFaint, textAlign: "center", marginTop: "12px", lineHeight: 1.7 }}>
+                No payment charged now.<br />Review details on next step.
+              </div>
             </div>
           </div>
         </div>
-      </main>
+      </div>
     </div>
   );
 }
