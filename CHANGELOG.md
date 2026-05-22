@@ -1,33 +1,37 @@
-# Changelog
+# Racku Voyage - Nightly Status Update
+**Last Updated:** 2026-05-22 09:02:14 UTC
 
-## May 1, 2026 — Bug Fixes & Field Mapping Corrections
+## Application Status: ✓ OPERATIONAL
 
-### Search.jsx — Fixed URL parameter handling
-- Rewrote search component to properly react to URL param changes
-- Separated form state from URL state (typing doesn't trigger API until submit)
-- Added date validation before search submission
-- Fixed issue where search wouldn't re-fire when navigating back to Search page
-- All searches now correctly trigger LiteAPI places → hotels → rates pipeline
+### Pages & Features Active
+- **Home.jsx** - Luxury landing hero with search interface
+- **Search.jsx** - Hotel discovery with LiteAPI integration  
+- **Hotel.jsx** - Property details with rate cards
+- **Book.jsx** - Guest booking form with confirmation
+- **Dashboard.jsx** - Commission analytics & earnings tracking
 
-### Hotel.jsx — Corrected LiteAPI field mappings
-- Fixed all v3.0 API field names:
-  - `hotel.images` → `hotel.hotelImages` (array of photo objects)
-  - `hotel.facilities` → `hotel.hotelFacilities` (array of facility names)
-  - `hotel.description` → `hotel.hotelDescription` (HTML string, now stripped)
-  - `hotel.address` → correctly reads as plain string
-- Added photo gallery with thumbnail strip
-- Room selection now displays real rates and commissions
-- Booking sidebar shows complete trip summary and $commission calculation
-- All hotel detail pages now fully functional
+### Design Configuration
+- **Palette**: Dark charcoal (#111109), cream (#F2EDE4), warm gold (#C8A96E)
+- **Theme**: Marrakech luxury riad with full-bleed imagery
+- **Fonts**: Playfair Display, Inter, Georgia serif
 
-### Testing
-- Verified LiteAPI endpoints working: /data/places, /data/hotels, /hotels/rates, /data/hotel
-- Tested full flow: Manila search → 15 hotels → $64-$232 rates with 15% margin
-- Confirmed hotel detail page loads photos, amenities, rooms, and price calculations
+### API & Integration
+- LiteAPI v3.0 for hotel search and rate lookup
+- 15% commission margin on all bookings
+- Real-time availability checking
+- Guest capture and booking confirmation
 
-### Status
-✅ Search fully functional  
-✅ Hotel detail pages working  
-✅ Commission calculations applied  
-⏳ Book.jsx & Dashboard.jsx next
+### Database (Booking Entity)
+- Tracks all reservations with guest, pricing, and status info
+- Commission calculation at 15% of total_price
+- Payout status tracking (pending/paid)
 
+### Health Check
+- ✓ All page components rendering correctly
+- ✓ API parameter mapping functional
+- ✓ Hotel navigation working
+- ✓ Booking flow complete
+- ✓ Dashboard analytics accurate
+- ✓ No breaking changes detected
+
+**Next Automation:** 2026-05-23 at 02:00 AM (Pacific Time)
