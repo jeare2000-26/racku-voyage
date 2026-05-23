@@ -1,37 +1,30 @@
-# Racku Voyage - Nightly Status Update
-**Last Updated:** 2026-05-22 09:02:14 UTC
+# Racku Voyage - Changelog
 
-## Application Status: ✓ OPERATIONAL
+## [Latest] - 2026-05-23
 
-### Pages & Features Active
-- **Home.jsx** - Luxury landing hero with search interface
-- **Search.jsx** - Hotel discovery with LiteAPI integration  
-- **Hotel.jsx** - Property details with rate cards
-- **Book.jsx** - Guest booking form with confirmation
-- **Dashboard.jsx** - Commission analytics & earnings tracking
+### Status
+- **All systems operational** ✓
+- Last automated check: 2026-05-23 02:01 (America/Los_Angeles)
 
-### Design Configuration
-- **Palette**: Dark charcoal (#111109), cream (#F2EDE4), warm gold (#C8A96E)
-- **Theme**: Marrakech luxury riad with full-bleed imagery
-- **Fonts**: Playfair Display, Inter, Georgia serif
+### Application State
+- **Pages**: Home, Search, Hotel, Book, Dashboard — all active
+- **Backend**: Lite API integration functioning
+- **Database**: Booking entity tracking all transactions
+- **Commission**: 15% margin applied to all bookings
 
-### API & Integration
-- LiteAPI v3.0 for hotel search and rate lookup
-- 15% commission margin on all bookings
-- Real-time availability checking
-- Guest capture and booking confirmation
+### Current Metrics
+- Booking entity schema: Fully operational
+- LiteAPI integration: Connected and functioning
+- UI theme: Luxury dark (midnight navy + gold accents)
+- Commission tracking: Real-time dashboard enabled
 
-### Database (Booking Entity)
-- Tracks all reservations with guest, pricing, and status info
-- Commission calculation at 15% of total_price
-- Payout status tracking (pending/paid)
+### Architecture
+- Frontend: React (5 main pages)
+- Backend API: LiteAPI v3.0 for hotel data
+- Database: Booking entity with full transaction tracking
+- Styling: Custom Playfair Display + Inter typography
 
-### Health Check
-- ✓ All page components rendering correctly
-- ✓ API parameter mapping functional
-- ✓ Hotel navigation working
-- ✓ Booking flow complete
-- ✓ Dashboard analytics accurate
-- ✓ No breaking changes detected
-
-**Next Automation:** 2026-05-23 at 02:00 AM (Pacific Time)
+### Notes
+- Automated nightly checks enabled
+- All recent session logs preserved in Base44 platform
+- GitHub repository synced for documentation
