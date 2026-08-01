@@ -1,5 +1,14 @@
 # Racku Voyage — Changelog
 
+## [2026-08-01] — Nightly status check
+
+### Status
+- App stable; no new page, entity, or fix changes detected since the previous check.
+- Booking entity remains active with no pending migrations.
+- Home, Search, Hotel, Book, and Dashboard pages remain unchanged and operational.
+- Lite API and GitHub sync remain configured.
+
+
 ## [Latest] — 2026-06-05
 
 ### Features
