@@ -1,5 +1,12 @@
 # Racku Voyage - Changelog
 
+## [2026-08-08]
+
+### Nightly Status
+- No new pages, entity migrations, features, or fixes detected since 2026-07-17.
+- Booking entity remains active with transaction and commission tracking enabled.
+- All five pages remain operational; Lite API and GitHub sync are working.
+
 ## [2026-08-07]
 
 ### Nightly Status
