@@ -1,3 +1,12 @@
+## [2026-08-18]
+
+### Nightly Status
+- No new pages, entity migrations, features, or fixes detected since 2026-07-17.
+- Booking entity remains active with transaction and commission tracking enabled.
+- All five pages remain operational; LiteAPI and GitHub sync are working.
+
+nightly: status check — app stable, no changes since 2026-07-17
+
 ## [2026-08-17]
 
 ### Nightly Status
